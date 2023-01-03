@@ -1,0 +1,1048 @@
+---
+title: "Wheeled Mobility Device (WMD) Analysis Script"
+author: "Jamie Danemayer"
+date: "November 2022"
+output:
+  html_document:
+  self_contained: no
+---
+
+Note: 
+
+This script analyses rATA data from countries using national samples, available in the GHO, and with identically cleande data. These include: 
+Azerbaijan (AZE), Bhutan (BTN), Burkina Faso (BFA), Djibouti (DJI), Dominican Republic (DOM), Georgia (GEO), Indonesia (IDN), Iran (IRN), Iraq (IRQ), Italy (ITA), Jordan (JOR), 
+Kenya (KEN), Libera (LBR), Maldives (MDV), Mongolia (MNG), Myanmar (MMR), Nepal (NPL), Poland (POL), Rwanda (RWA), Senegal (SEN), Togo (TGO), Ukraine (UKR). 
+
+Abbreviations: 
+
+-MFD: Mobility Functional Difficulty
+-none: No difficulty
+-some: Some difficulty
+-cannot.do: Cannot do at all
+-any.mfd: Any level of mobility functional difficulty, AKA any 'need' for mobility APs
+-any.use: Use of any mobility AP (wc.manual, wc.manual.postural, wc.manual.push, wc.electric, tricycle)
+-nb.is.ns:* non-binary, intersex, other/not specified 
+
+List of tables:
+
+-1 Mobilitiy Functional Difficulty by key indices
+-2 Wheeled Mobility Device use by key indices
+-3 Use, Need, and Unmet need for at least one wheeled mobility device by key indices
+-4 Most commonly used wheeled mobility devices
+-5 Wheeled mobility device use information 
+-6 Most common barriers to accessing wheeled mobility devices
+
+```{r setup, echo = FALSE}
+
+# Install packages
+
+# install.packages("knitr")
+suppressWarnings(library("knitr"))
+
+# install.packages("rmarkdown")
+suppressWarnings(library("rmarkdown"))
+
+# install.packages("jsonlite")
+suppressWarnings(library("jsonlite"))
+
+# install.packages("readxl")
+suppressWarnings(library("readxl"))
+
+# install.packages("writexl")
+suppressWarnings(library("writexl"))
+
+# install.packages("openxlsx")
+suppressWarnings(library("openxlsx"))
+
+# install.packages("tibble")
+suppressWarnings(library("tibble"))
+
+# install.packages("epitools")
+suppressWarnings(library("epitools"))
+
+# install.packages("dplyr")
+suppressWarnings(library("dplyr"))
+
+```
+
+# Part 0: Set up the dataset 
+
+```{r setup, echo = FALSE}
+# List what's in the folder 
+country_dir <- "C:/Users/Jamie Danemayer/Documents/R/rATA/rata_data/"
+country_files <- list.files(path = "C:/Users/Jamie Danemayer/Documents/R/rATA/rata_data/", pattern = "^\\D\\D\\D_clean_w_children.xlsx")
+## Utilise country abbrevs
+countries <- gsub('(...)_clean_w_children.xlsx', '\\1', country_files) 
+## regular expression here is a find and replace, replacing everything in the first ''s with what's in the second ''s; //1 indicates replaces the whole match with what's in group 1 (...)
+
+# Define cols to keep 
+keep.cols <- c('AGE', 'SEX', 'MOBILITY', 'HEARING', 'COMM', 'REMEMB', 'SELFCARE', # Demographics, functional domains
+                'PROD1', 'PROD2', 'PROD3', # 3 most important products
+                'DISTKM1', 'DISTKM2', 'DISTKM3', # Dist. travelled for each product
+                'SATPR1', 'SATPR2', 'SATPR3', # Satisfaction with each product
+                'SVCPR1', 'SVCPR2', 'SVCPR3', # Satisfaction with assessment/training for each product
+                'SATFU1', 'SATFU2', 'SATFU3', # Satisfaction with follow-up/repair for each product
+                'SUITPR1', 'SUITPR2', 'SUITPR3', # Suitability to home surroundings for each product
+                'UTILPR1', 'UTILPR2', 'UTILPR3', # Extend can do what you want w/each product
+                'ENVBAR1', 'ENVBAR2', 'ENVBAR3', # Usefulness in different environments of each product
+                'SOURCE1_1', 'SOURCE1_2', 'SOURCE1_3', 'SOURCE1_4', 'SOURCE1_5', 'SOURCE1_87', 'SOURCE1_88', # Source of product 1
+                'SOURCE2_1', 'SOURCE2_2', 'SOURCE2_3', 'SOURCE2_4', 'SOURCE2_5', 'SOURCE2_87', 'SOURCE2_88', # Source of product 2
+                'SOURCE3_1', 'SOURCE3_2', 'SOURCE3_3', 'SOURCE3_4', 'SOURCE3_5', 'SOURCE3_87', 'SOURCE3_88', # Source of product 3
+                'PAYER1_1', 'PAYER1_2', 'PAYER1_3', 'PAYER1_4', 'PAYER1_5', 'PAYER1_6', 'PAYER1_87', 'PAYER1_88', # Payer for product 1
+                'PAYER2_1', 'PAYER2_2', 'PAYER2_3', 'PAYER2_4', 'PAYER2_5', 'PAYER2_6', 'PAYER2_87', 'PAYER2_88', # Payer for product 2
+                'PAYER3_1', 'PAYER3_2', 'PAYER3_3', 'PAYER3_4', 'PAYER3_5', 'PAYER3_6', 'PAYER3_87', 'PAYER3_88', # Payer for product 3
+                'MOBILITYQ_104', 'MOBILITYQ_105', 'MOBILITYQ_106', 'MOBILITYQ_107', 'MOBILITYQ_120', # Use of WMDs
+                'MOBILITYU_104', 'MOBILITYU_105', 'MOBILITYU_106', 'MOBILITYU_107', 'MOBILITYU_120', # Unmet need for WMDs
+                'BARRIER_1', 'BARRIER_2', 'BARRIER_3', 'BARRIER_4', 'BARRIER_5', 'BARRIER_6', 'BARRIER_7', 'BARRIER_87', 'BARRIER_88' # Barriers to all APs
+              )
+                # 'DSATPR_1', 'DSATPR_2', 'DSATPR_3', 'DSATPR_4', 'DSATPR_5', 'DSATPR_6', 'DSATPR_87',     
+                # 'DSATSVCPR_1', 'DSATSVCPR_2', 'DSATSVCPR_3', 'DSATSVCPR_4', 'DSATSVCPR_5', 'DSATSVCPR_6', 'DSATSVCPR_7', 'DSATSVCPR_87',
+                # 'DUTILPR_1', 'DUTILPR_2', 'DUTILPR_3', 'DUTILPR_4', 'DUTILPR_5', 'DUTILPR_6', 'DUTILPR_7', 'DUTILPR_8', 'DUTILPR_9', 'DUTILPR_10', 'DUTILPR_11', 'DUTILPR_87')     
+
+# Read in World Bank data
+classes <- read_xlsx(path = "C:/Users/Jamie Danemayer/Documents/R/rATA/CLASS.xlsx")
+
+# Define age groups
+ag.10.starts <- c(0, 10, 20, 30, 40, 50, 60, 70)
+ag.10.ends <- c(9, 19, 29, 39, 49, 59, 69, 120)
+
+ag.3.starts <- c(2, 18, 65)
+ag.3.ends <- c(17, 64, 120)
+
+# Read in files
+rm(world_table)
+for (i in 1:length(country_files)) {
+  # Read in & prep each country
+  country_table <- read_xlsx(file.path(country_dir, country_files[i]))
+    
+  # Keep only relevant cols
+  country_table <- country_table[, keep.cols] # defines we want all the rows, and the keep.cols only
+
+  # Add country abbreviation
+  country_table['country.code'] <- countries[i]
+
+  # Add income abbreviation
+  country_table['income'] <- classes[which(classes$Code == countries[i]), 'Income group']
+
+  # Add 10 yr age group categories
+  for (j in 1:length(ag.10.starts)) {
+    start <- ag.10.starts[j]
+    end <- ag.10.ends[j]
+    country_table[which(country_table$AGE >= start & country_table$AGE <= end), "AGE.10"] <- paste0(start, '-', end)
+  }
+
+  # Add 3 main age group categories
+  for (j in 1:length(ag.3.starts)) {
+    start <- ag.3.starts[j]
+    end <- ag.3.ends[j]
+    country_table[which(country_table$AGE >= start & country_table$AGE <= end), "AGE.3"] <- paste0(start, '-', end)
+  }
+
+  # Add 'any mfd' column
+  country_table[which(country_table$MOBILITY %in% c(1, 2, 3)), "ANY.MFD"] <- 1
+  country_table[which(country_table$MOBILITY %in% c(0, 88, NA)), "ANY.MFD"] <- 0
+  # %in% means 'or'
+
+  # Add 'any MFD use' column
+  country_table[which(rowSums(country_table[, c("MOBILITYQ_104", "MOBILITYQ_105", "MOBILITYQ_106", "MOBILITYQ_107", "MOBILITYQ_120")]) > 0), "ANY.USE"] <- 1
+  country_table[which(rowSums(country_table[, c("MOBILITYQ_104", "MOBILITYQ_105", "MOBILITYQ_106", "MOBILITYQ_107", "MOBILITYQ_120")]) == 0), "ANY.USE"] <- 0
+  ## Any country table row WHICH (this is true), in the new col, is 1
+  
+  # Add 'any unmet' column for WMDs
+  country_table[which(rowSums(country_table[, c("MOBILITYU_104", "MOBILITYU_105", "MOBILITYU_106", "MOBILITYU_107", "MOBILITYU_120")]) > 0), "ANY.UNMET"] <- 1
+  country_table[which(rowSums(country_table[, c("MOBILITYU_104", "MOBILITYU_105", "MOBILITYU_106", "MOBILITYU_107", "MOBILITYU_120")]) == 0), "ANY.UNMET"] <- 0
+
+  # Add NEED1 column
+  country_table[which(country_table$MOBILITY == 1), "NEED1"] <- 1
+  country_table[which(country_table$MOBILITY %in% c(0, 2, 3, 88)), "NEED1"] <- 0
+
+  # Add NEED2 column
+  country_table[which(country_table$MOBILITY %in% c(2, 3)), "NEED2"] <- 1
+  country_table[which(country_table$MOBILITY %in% c(0, 1, 88)), "NEED2"] <- 0
+
+  # Add total need column
+  country_table[which(country_table$ANY.USE == 1|country_table$ANY.UNMET == 1), "TOTAL.NEED"] <- 1
+  country_table[which(country_table$ANY.USE == 0 & country_table$ANY.UNMET == 0), "TOTAL.NEED"] <- 0
+
+  # Add coverage column
+  country_table[which(country_table$ANY.USE == 1 & country_table$TOTAL.NEED == 1), "COVERAGE"] <- 1
+  country_table[which(country_table$ANY.USE == 0 | country_table$TOTAL.NEED == 0), "COVERAGE"] <- 0
+
+  # Add use WITHOUT unmet need column (these are for WMDs in general, not matched device-to-device)
+  country_table[which(country_table$ANY.USE == 1 & country_table$ANY.UNMET == 0), "USE.NO.UNMET"] <- 1
+  country_table[which(country_table$ANY.USE == 0 | country_table$ANY.UNMET == 1), "USE.NO.UNMET"] <- 0
+  
+  # Add use with unmet need (under-met) column
+  country_table[which(country_table$ANY.USE == 1 & country_table$ANY.UNMET == 1), "USE.AND.UNMET"] <- 1
+  country_table[which(country_table$ANY.USE == 0 | country_table$ANY.UNMET == 0), "USE.AND.UNMET"] <- 0
+
+  # Add NO use with unmet need (actual unmet need) column
+  country_table[which(country_table$ANY.USE == 0 & country_table$ANY.UNMET == 1), "NO.USE.UNMET"] <- 1
+  country_table[which(country_table$ANY.USE == 1 | country_table$ANY.UNMET == 0), "NO.USE.UNMET"] <- 0
+
+
+  # Add to big table
+  if (!exists('world_table')) {
+    world_table <- country_table
+  } else {
+    world_table <- rbind(world_table, country_table)
+  }
+}
+View(world_table)
+
+# Define key indices rownames series
+## 10 Year age groups rownames
+ten.rn <- c("0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70+")
+
+## 3 Main age groups rownames
+three.rn <- c("2-17", "18-64", "65+")
+
+## Sex rownames
+sex.rn <- c("male", "female")
+
+## Location rownames
+location.rn <- c("urban", "rural")
+
+## Country income rownames
+income.rn <- c("low", "lower-middle", "upper-middle", "high")
+
+## Mobility functional difficulty (MFD) levels rownames
+mfd.rn <- c("none", "some", "a lot", "cannot do", "missing")
+
+## Wheeled mobility device (WMD) types rownames
+wmd.rn <- c("manual", "manual postural", "manual push", "electric", "tricycle")
+
+## WMD source rownames
+source.rn <- c("public", "NGO", "private", "friends/family", "self-made", "other", "don't know")
+
+## Funding rownames
+funding.rn <- c("government", "NGO/charity", "employer/school", "insurance", "out-of-pocket", "friends/family", "other", "don't know")
+
+## Distance traveled rownames
+distance.rn <- c("<5", "6-25", "26-50", "51-100", ">100", "don't know")
+
+## Product satisfaction rownames
+satisfaction.rn <- c("very dissatisfied", "dissatisfied", "neither satisfied nor dissatisfied", "quite satisfied", "very satisfied", "refused/don't know")
+
+## assessment/training and repair/follow-up satisfaction rownames
+satisfaction6.rn <- c("very dissatisfied", "dissatisfied", "neither satisfied nor dissatisfied", "quite satisfied", "very satisfied", "na", "refused/don't know")
+
+## Suitable for home/ helps you do what you want rownames useful in different environments rownames
+suitable.rn <- c("not at all", "not much", "moderately", "mostly", "completely", "refused/don't know")
+
+## useful in different environments rownames
+suitable6.rn <- c("not at all", "not much", "moderately", "mostly", "completely", "na", "refused/don't know")
+
+## Barriers rownames
+barriers.rn <- c("not available", "not suitable", "lack of transport/too far", "lack of time", 
+                 "lack of support", "cannot afford", "stigma/syness", "other", "do not know about AP")
+
+
+wt <- createWorkbook()
+addWorksheet(wt, sheetName = "World Table")
+writeDataTable(wt, sheet = "World Table", x = as.data.frame(world_table), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+saveWorkbook(wt, 'world_table.xlsx', overwrite = T)
+
+
+```
+
+# Part 1: MFD and Key Indices
+
+```{r mfd and indices, echo = FALSE}
+
+# Table 1
+# Create the table in parts
+t1.0 <- (table(world_table$AGE.10, world_table$MOBILITY))
+rownames(t1.0) <- ten.rn
+
+t1.1 <- (table(world_table$SEX, world_table$MOBILITY))
+rownames(t1.1) <- sex.rn
+
+t1.3 <- (table(world_table$income, world_table$MOBILITY))
+rownames(t1.3) <- income.rn
+
+# Combine to one table
+t1 <- rbind(t1.0, t1.1, t1.3)
+
+# Add an overall row
+t1.overall <- colSums(t1[9:10, ])
+t1 <- rbind(t1.overall, t1)
+row.names(t1)[row.names(t1) == '1'] <- 'overall'
+
+# Make a dataframe 
+t1 <- as.data.frame(t1)
+
+# Calculate proportions
+t1.rs <- rowSums(t1)
+
+t1.prop <- data.frame(
+  none = t1$'0',
+  none.prop = round((t1$'0'/t1.rs)*100, 1),
+  some = t1$'1',
+  some.prop = round((t1$'1'/t1.rs)*100, 1),
+  a.lot = t1$'2',
+  a.lot.prop = round((t1$'2'/t1.rs)*100, 1),
+  cannot.do = t1$'3',
+  cannot.do.prop = round((t1$'3'/t1.rs)*100, 1),
+  missing = t1$'88',
+  missing.prop = round((t1$'88'/t1.rs)*100, 1)
+)
+
+# Add column for any MFD
+t1.prop['any.mfd'] <- rowSums(t1[, c('1', '2', '3')])
+t1.prop['any.mfd.prop'] <- rowSums(t1.prop[, c('some.prop', 'a.lot.prop', 'cannot.do.prop')])
+
+# Add a title
+# kable(t1.prop, caption = "Mobility Functional Difficulty (MFD) by Key Indices")
+
+wb <- createWorkbook()
+addWorksheet(wb, sheetName = "Table 1")
+writeDataTable(wb, sheet = "Table 1", x = as.data.frame(t1.prop), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+saveWorkbook(wb, 'wmd.rata.tables.xlsx', overwrite = T)
+
+```
+# Part 2: TBD
+
+# Part 3: WMD Use, Unmet need, and Total need, by Key Indices
+
+```{r use unmet and need, echo = FALSE}
+
+total <- nrow(world_table)
+
+# Build the prevalence tables
+
+## USE overall
+  t3.1.0 <- table(world_table$ANY.USE)
+  t3.1.0.rs <- sum(t3.1.0)
+  t3.1.0.prop <- round(t3.1.0[2]/t3.1.0.rs*100, 3)
+  t3.1.0.prev <- 'NA'
+  t3.1.0 <- c(t3.1.0.rs, t3.1.0[2], t3.1.0.prop, t3.1.0.prev)
+## USE x SEX
+  t3.1.1 <- table(world_table$SEX, world_table$ANY.USE)
+  rownames(t3.1.1) <- sex.rn
+  t3.1.1.rs <- rowSums(t3.1.1)
+  t3.1.1.sum <- sum(t3.1.1)
+  t3.1.1.prop <- round((t3.1.1[,2]/t3.1.1.rs)*100, 3)
+  t3.1.1.prev <- round((t3.1.1[,2]/total)*100, 3)
+  t3.1.1 <- cbind(t3.1.1.rs, t3.1.1[,2], t3.1.1.prop, t3.1.1.prev)
+## USE x AGE
+  t3.1.2 <- table(world_table$AGE.3, world_table$ANY.USE)
+  rownames(t3.1.2) <- three.rn
+  t3.1.2.rs <- rowSums(t3.1.2)
+  t3.1.2.sum <- sum(t3.1.2)
+  t3.1.2.prop <- round((t3.1.2[,2]/t3.1.2.rs)*100, 3)
+  t3.1.2.prev <- round((t3.1.2[,2]/total)*100, 3)
+  t3.1.2 <- cbind(t3.1.2.rs, t3.1.2[,2], t3.1.2.prop, t3.1.2.prev)
+## USE x income
+  t3.1.3 <- table(world_table$income, world_table$ANY.USE)
+  rownames(t3.1.3) <- income.rn
+  t3.1.3.rs <- rowSums(t3.1.3)
+  t3.1.3.sum <- sum(t3.1.3)
+  t3.1.3.prop <- round((t3.1.3[,2]/t3.1.3.rs)*100, 3)
+  t3.1.3.prev <- round((t3.1.3[,2]/total)*100, 3)
+  t3.1.3 <- cbind(t3.1.3.rs, t3.1.3[,2], t3.1.3.prop, t3.1.3.prev)
+## USE x MOBILITY
+  t3.1.4 <- table(world_table$MOBILITY, world_table$ANY.USE)
+  rownames(t3.1.4) <- mfd.rn
+  t3.1.4.rs <- rowSums(t3.1.4)
+  t3.1.4.sum <- sum(t3.1.4)
+  t3.1.4.prop <- round((t3.1.4[,2]/t3.1.4.rs)*100, 3)
+  t3.1.4.prev <- round((t3.1.4[,2]/total)*100, 3)
+  t3.1.4 <- cbind(t3.1.4.rs, t3.1.4[,2], t3.1.4.prop, t3.1.4.prev)
+## combine
+t3.1 <- rbind(t3.1.0, t3.1.1, t3.1.2, t3.1.3, t3.1.4)
+
+
+## UNMET overall
+  t3.2.0 <- table(world_table$ANY.UNMET)
+  t3.2.0.rs <- sum(t3.2.0)
+  t3.2.0.prop <- round(t3.2.0[2]/t3.2.0.rs*100, 3)
+  t3.2.0.prev <- 'NA'
+  t3.2.0 <- c(t3.2.0.rs, t3.2.0[2], t3.2.0.prop, t3.2.0.prev)
+## UNMET x SEX
+  t3.2.1 <- table(world_table$SEX, world_table$ANY.UNMET)
+  rownames(t3.2.1) <- sex.rn
+  t3.2.1.rs <- rowSums(t3.2.1)
+  t3.2.1.sum <- sum(t3.2.1)
+  t3.2.1.prop <- round((t3.2.1[,2]/t3.2.1.rs)*100, 3)
+  t3.2.1.prev <- round((t3.2.1[,2]/total)*100, 3)
+  t3.2.1 <- cbind(t3.2.1.rs, t3.2.1[,2], t3.2.1.prop, t3.2.1.prev)
+## UNMET x AGE
+  t3.2.2 <- table(world_table$AGE.3, world_table$ANY.UNMET)
+  rownames(t3.2.2) <- three.rn
+  t3.2.2.rs <- rowSums(t3.2.2)
+  t3.2.2.sum <- sum(t3.2.2)
+  t3.2.2.prop <- round((t3.2.2[,2]/t3.2.2.rs)*100, 3)
+  t3.2.2.prev <- round((t3.2.2[,2]/total)*100, 3)
+  t3.2.2 <- cbind(t3.2.2.rs, t3.2.2[,2], t3.2.2.prop, t3.2.2.prev)
+## UNMET x income
+  t3.2.3 <- table(world_table$income, world_table$ANY.UNMET)
+  rownames(t3.2.3) <- income.rn
+  t3.2.3.rs <- rowSums(t3.2.3)
+  t3.2.3.sum <- sum(t3.2.3)
+  t3.2.3.prop <- round((t3.2.3[,2]/t3.2.3.rs)*100, 3)
+  t3.2.3.prev <- round((t3.2.3[,2]/total)*100, 3)
+  t3.2.3 <- cbind(t3.2.3.rs, t3.2.3[,2], t3.2.3.prop, t3.2.3.prev)
+## UNMET x MOBILITY
+  t3.2.4 <- table(world_table$MOBILITY, world_table$ANY.UNMET)
+  rownames(t3.2.4) <- mfd.rn
+  t3.2.4.rs <- rowSums(t3.2.4)
+  t3.2.4.sum <- sum(t3.2.4)
+  t3.2.4.prop <- round((t3.2.4[,2]/t3.2.4.rs)*100, 3)
+  t3.2.4.prev <- round((t3.2.4[,2]/total)*100, 3)
+  t3.2.4 <- cbind(t3.2.4.rs, t3.2.4[,2], t3.2.4.prop, t3.2.4.prev)
+## combine
+t3.2 <- rbind(t3.2.0, t3.2.1, t3.2.2, t3.2.3, t3.2.4)
+
+## TOTAL NEED overall
+  t3.3.0 <- table(world_table$TOTAL.NEED)
+  t3.3.0.rs <- sum(t3.3.0)
+  t3.3.0.prop <- round(t3.3.0[2]/t3.3.0.rs*100, 3)
+  t3.3.0.prev <- 'NA'
+  t3.3.0 <- c(t3.3.0.rs, t3.3.0[2], t3.3.0.prop, t3.3.0.prev)
+## TOTAL NEED x SEX
+  t3.3.1 <- table(world_table$SEX, world_table$TOTAL.NEED)
+  rownames(t3.3.1) <- sex.rn
+  t3.3.1.rs <- rowSums(t3.3.1)
+  t3.3.1.sum <- sum(t3.3.1)
+  t3.3.1.prop <- round((t3.3.1[,2]/t3.3.1.rs)*100, 3)
+  t3.3.1.prev <- round((t3.3.1[,2]/total)*100, 3)
+  t3.3.1 <- cbind(t3.3.1.rs, t3.3.1[,2], t3.3.1.prop, t3.3.1.prev)
+## TOTAL NEED x AGE
+  t3.3.2 <- table(world_table$AGE.3, world_table$TOTAL.NEED)
+  rownames(t3.3.2) <- three.rn
+  t3.3.2.rs <- rowSums(t3.3.2)
+  t3.3.2.sum <- sum(t3.3.2)
+  t3.3.2.prop <- round((t3.3.2[,2]/t3.3.2.rs)*100, 3)
+  t3.3.2.prev <- round((t3.3.2[,2]/total)*100, 3)
+  t3.3.2 <- cbind(t3.3.2.rs, t3.3.2[,2], t3.3.2.prop, t3.3.2.prev)
+## TOTAL NEED x income
+  t3.3.3 <- table(world_table$income, world_table$TOTAL.NEED)
+  rownames(t3.3.3) <- income.rn
+  t3.3.3.rs <- rowSums(t3.3.3)
+  t3.3.3.sum <- sum(t3.3.3)
+  t3.3.3.prop <- round((t3.3.3[,2]/t3.3.3.rs)*100, 3)
+  t3.3.3.prev <- round((t3.3.3[,2]/total)*100, 3)
+  t3.3.3 <- cbind(t3.3.3.rs, t3.3.3[,2], t3.3.3.prop, t3.3.3.prev)
+## TOTAL NEED x MOBILITY
+  t3.3.4 <- table(world_table$MOBILITY, world_table$TOTAL.NEED)
+  rownames(t3.3.4) <- mfd.rn
+  t3.3.4.rs <- rowSums(t3.3.4)
+  t3.3.4.sum <- sum(t3.3.4)
+  t3.3.4.prop <- round((t3.3.4[,2]/t3.3.4.rs)*100, 3)
+  t3.3.4.prev <- round((t3.3.4[,2]/total)*100, 3)
+  t3.3.4 <- cbind(t3.3.4.rs, t3.3.4[,2], t3.3.4.prop, t3.3.4.prev)
+## combine
+t3.3 <- rbind(t3.3.0, t3.3.1, t3.3.2, t3.3.3, t3.3.4)
+
+
+## COVERAGE overall
+  t3.4.0 <- table(world_table$COVERAGE)
+  t3.4.0.rs <- sum(t3.4.0)
+  t3.4.0.prop <- round(t3.4.0[2]/t3.4.0.rs*100, 3)
+  t3.4.0.prev <- 'NA'
+  t3.4.0 <- c(t3.4.0.rs, t3.4.0[2], t3.4.0.prop, t3.4.0.prev)
+## COVERAGE x SEX
+  t3.4.1 <- table(world_table$SEX, world_table$COVERAGE)
+  rownames(t3.4.1) <- sex.rn
+  t3.4.1.rs <- rowSums(t3.4.1)
+  t3.4.1.sum <- sum(t3.4.1)
+  t3.4.1.prop <- round((t3.4.1[,2]/t3.4.1.rs)*100, 3)
+  t3.4.1.prev <- round((t3.4.1[,2]/total)*100, 3)
+  t3.4.1 <- cbind(t3.4.1.rs, t3.4.1[,2], t3.4.1.prop, t3.4.1.prev)
+## COVERAGE x AGE
+  t3.4.2 <- table(world_table$AGE.3, world_table$COVERAGE)
+  rownames(t3.4.2) <- three.rn
+  t3.4.2.rs <- rowSums(t3.4.2)
+  t3.4.2.sum <- sum(t3.4.2)
+  t3.4.2.prop <- round((t3.4.2[,2]/t3.4.2.rs)*100, 3)
+  t3.4.2.prev <- round((t3.4.2[,2]/total)*100, 3)
+  t3.4.2 <- cbind(t3.4.2.rs, t3.4.2[,2], t3.4.2.prop, t3.4.2.prev)
+## COVERAGE x income
+  t3.4.3 <- table(world_table$income, world_table$COVERAGE)
+  rownames(t3.4.3) <- income.rn
+  t3.4.3.rs <- rowSums(t3.4.3)
+  t3.4.3.sum <- sum(t3.4.3)
+  t3.4.3.prop <- round((t3.4.3[,2]/t3.4.3.rs)*100, 3)
+  t3.4.3.prev <- round((t3.4.3[,2]/total)*100, 3)
+  t3.4.3 <- cbind(t3.4.3.rs, t3.4.3[,2], t3.4.3.prop, t3.4.3.prev)
+## COVERAGE x MOBILITY
+  t3.4.4 <- table(world_table$MOBILITY, world_table$COVERAGE)
+  rownames(t3.4.4) <- mfd.rn
+  t3.4.4.rs <- rowSums(t3.4.4)
+  t3.4.4.sum <- sum(t3.4.4)
+  t3.4.4.prop <- round((t3.4.4[,2]/t3.4.4.rs)*100, 3)
+  t3.4.4.prev <- round((t3.4.4[,2]/total)*100, 3)
+  t3.4.4 <- cbind(t3.4.4.rs, t3.4.4[,2], t3.4.4.prop, t3.4.4.prev)
+## combine
+t3.4 <- rbind(t3.4.0, t3.4.1, t3.4.2, t3.4.3, t3.4.4)
+
+## Combine all
+t3.1234 <- rbind(t3.1, t3.2, t3.3, t3.4)
+colnames(t3.1234) <- c('Row total', 'n with outcome', 'n/row total (%)', 'prevalence (%) (n/overall total)') 
+
+## Add to excel sheet
+addWorksheet(wb, sheetName = "Table 3.1234")
+writeDataTable(wb, sheet = "Table 3.1234", x = as.data.frame(t3.1234), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+
+## Set up constants for the ORs
+oddsratio(world_table$SEX, world_table$ANY.USE)
+or.vars <- c('SEX', 'AGE.3', 'income', 'MOBILITY')
+
+## USE ORs
+sheet.offset <- 1
+addWorksheet(wb, sheetName = paste0('Use ORs'))
+
+for(x in or.vars) {
+  datums <- table(pull(world_table, x), world_table$ANY.USE)
+  if (x == 'MOBILITY') {
+    # Reorder mobility table so 1 is first
+    datums <- datums[c(2,1,3,4,5),]
+  }
+  y <- oddsratio(datums)
+  ## Add to excel sheet
+  z <- cbind(y$measure, y$p.value[,2])
+  print(z)
+  colnames(z)[4] <- 'p value'
+  writeDataTable(wb, sheet = paste0('Use ORs'), x = as.data.frame(z), 
+                 colNames = T, rowNames = T, tableStyle = 'TableStyleLight11', 
+                 startRow = sheet.offset, withFilter = F)
+  sheet.offset <- sheet.offset + nrow(datums) + 1
+}
+
+## UNMET ORs
+sheet.offset <- 1
+addWorksheet(wb, sheetName = paste0('Unmet ORs'))
+
+for(x in or.vars) {
+  datums <- table(pull(world_table, x), world_table$ANY.UNMET)
+  if (x == 'MOBILITY') {
+    # Reorder mobility table so 1 is first
+    datums <- datums[c(2,1,3,4,5),]
+  }
+  y <- oddsratio(datums)
+  ## Add to excel sheet
+  z <- cbind(y$measure, y$p.value[,2])
+  print(z)
+  colnames(z)[4] <- 'p value'
+  writeDataTable(wb, sheet = paste0('Unmet ORs'), x = as.data.frame(z), 
+                 colNames = T, rowNames = T, tableStyle = 'TableStyleLight11', 
+                 startRow = sheet.offset, withFilter = F)
+  sheet.offset <- sheet.offset + nrow(datums) + 1
+}
+
+## TOTAL NEED ORs
+sheet.offset <- 1
+addWorksheet(wb, sheetName = paste0('TOTAL NEED ORs'))
+
+for(x in or.vars) {
+  datums <- table(pull(world_table, x), world_table$TOTAL.NEED)
+  if (x == 'MOBILITY') {
+    # Reorder mobility table so 1 is first
+    datums <- datums[c(2,1,3,4,5),]
+  }
+  y <- oddsratio(datums)
+  ## Add to excel sheet
+  z <- cbind(y$measure, y$p.value[,2])
+  print(z)
+  colnames(z)[4] <- 'p value'
+  writeDataTable(wb, sheet = paste0('TOTAL NEED ORs'), x = as.data.frame(z), 
+                 colNames = T, rowNames = T, tableStyle = 'TableStyleLight11', 
+                 startRow = sheet.offset, withFilter = F)
+  sheet.offset <- sheet.offset + nrow(datums) + 1
+}
+
+# Repeat for Coverage
+sheet.offset <- 1
+addWorksheet(wb, sheetName = paste0('COVERAGE ORs'))
+
+for(x in or.vars) {
+  datums <- table(pull(world_table, x), world_table$COVERAGE)
+  if (x == 'MOBILITY') {
+    # Reorder mobility table so 1 is first
+    datums <- datums[c(2,1,3,4,5),]
+  }
+  y <- oddsratio(datums)
+  ## Add to excel sheet
+  z <- cbind(y$measure, y$p.value[,2])
+  print(z)
+  colnames(z)[4] <- 'p value'
+  writeDataTable(wb, sheet = paste0('COVERAGE ORs'), x = as.data.frame(z), 
+                 colNames = T, rowNames = T, tableStyle = 'TableStyleLight11', 
+                 startRow = sheet.offset, withFilter = F)
+  sheet.offset <- sheet.offset + nrow(datums) + 1
+}
+
+## SAVE to excel
+saveWorkbook(wb, 'wmd.rata.tables.xlsx', overwrite = T)
+
+```
+
+# Part 4: WMD Use and Unmet Need
+
+```{r wmd use unmet, echo = FALSE}
+
+# Table 4
+
+## Calculate a denominator for all w/MFD
+mfd <- sum(world_table$ANY.MFD == '1')
+
+## Use
+## Create list of '1' for any.mfd and '1' for use of each wmd
+use.list <-c(sum(world_table$ANY.MFD == '1' & world_table$MOBILITYQ_104 == '1'), 
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYQ_105 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYQ_106 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYQ_107 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYQ_120 == '1')
+             )
+
+## Create a list for percentages
+use.prop <- round((use.list/mfd)*100, 3)
+none.prop <- round((t1$'0'/t1.rs)*100, 3)
+
+t4.1 <- data.frame(
+  use.n = use.list,
+  use.prop = c(round((use.list/mfd)*100, 1))
+)
+
+colnames(t4.1) <- c('n', '%')
+row.names(t4.1) <- wmd.rn
+
+## Unmet need
+## Create list of '1' for any.mfd and '1' for unmet need of each wmd
+unmet.list <-c(sum(world_table$ANY.MFD == '1' & world_table$MOBILITYU_104 == '1'), 
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYU_105 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYU_106 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYU_107 == '1'),
+             sum(world_table$ANY.MFD == '1' & world_table$MOBILITYU_120 == '1')
+             )
+
+
+t4.2 <- data.frame(
+  unmet.n = unmet.list,
+  unmet.prop = round((unmet.list/mfd)*100, 3)
+)
+
+colnames(t4.2) <- c('n', '%')
+row.names(t4.2) <- wmd.rn
+
+# Combine tables
+t4 <- rbind(t4.1, t4.2)
+
+addWorksheet(wb, sheetName = "Table 4")
+writeDataTable(wb, sheet = "Table 4", x = as.data.frame(t4), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+saveWorkbook(wb, 'wmd.rata.tables.xlsx', overwrite = T)
+
+
+```
+
+# Part 5: WMD Use Info
+
+```{r wmd use info, echo = FALSE}
+
+world_table <- as.data.frame(world_table)
+
+# Set a constant for total listing WMD as 1, 2, or 3rd AP
+wmd.123 <- sum(nrow(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), ]), 
+               nrow(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), ]),  
+               nrow(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), ]))
+
+
+# Funding
+## PROD1
+payer1.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_1']))
+payer1.2 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_2']))
+payer1.3 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_3']))
+payer1.4 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_4']))
+payer1.5 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_5']))
+payer1.6 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_6']))
+payer1.87 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_87']))
+payer1.88 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PAYER1_88']))
+
+payer1 <- rbind(payer1.1, payer1.2, payer1.3, payer1.4, payer1.5, payer1.6, payer1.87, payer1.88)
+row.names(payer1) <- c("na", "government", "na", "NGO/charity", "na", "employer/school", "na", "insurance", "na", "out-of-pocket", "na", "friends/family", "na", "other", "na", "don't know")
+payer1 <- as.data.frame(payer1)
+payer1 <- payer1 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13, 15))
+
+## PROD 2
+payer2.1 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_1']))
+payer2.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_2']))
+payer2.3 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_3']))
+payer2.4 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_4']))
+payer2.5 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_5']))
+payer2.6 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_6']))
+payer2.87 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_87']))
+payer2.88 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PAYER2_88']))
+
+payer2 <- rbind(payer2.1, payer2.2, payer2.3, payer2.4, payer2.5, payer2.6, payer2.87, payer2.88)
+row.names(payer2) <- c("na", "government", "na", "NGO/charity", "na", "employer/school", "na", "insurance", "na", "out-of-pocket", "na", "friends/family", "na", "other", "na", "don't know")
+payer2 <- as.data.frame(payer2)
+payer2 <- payer2 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13, 15))
+
+## PROD 3
+payer3.1 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_1']))
+payer3.2 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_2']))
+payer3.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_3']))
+payer3.4 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_4']))
+payer3.5 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_5']))
+payer3.6 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_6']))
+payer3.87 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_87']))
+payer3.88 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PAYER3_88']))
+
+payer3 <- rbind(payer3.1, payer3.2, payer3.3, payer3.4, payer3.5, payer3.6, payer3.87, payer3.88)
+payer3 <- rbind(payer3, c(0, 0, 0, 0, 0)) # 'hard coded' a row as no one using a WMD as their third device responded 1 to PAYER3_88. 
+row.names(payer3) <- c("na", "government", "na", "NGO/charity", "na", "employer/school", "na", "insurance", "na", "out-of-pocket", "na", "friends/family", "na", "other", "na", "don't know")
+payer3 <- as.data.frame(payer3)
+payer3 <- payer3 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13, 15))
+
+# Combine tables
+t5.1 <- cbind(payer1, payer2, payer3)
+t5.1.n <- rowSums(t5.1)
+t5.1 <- cbind(t5.1, t5.1.n)
+
+t5.1.prop <- (round(t5.1.n/wmd.123*100, 1))
+t5.1 <- cbind(t5.1, t5.1.prop)
+t5.1 <- t5.1[ , -c(1:15)]
+
+colnames(t5.1) <- c("n", "prop")
+
+# Distance
+t5.2.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'DISTKM1']))
+row.names(t5.2.1) <- distance.rn
+t5.2.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'DISTKM2']))
+row.names(t5.2.2) <- distance.rn
+t5.2.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'DISTKM3']))
+
+t5.2 <- cbind(t5.2.1, t5.2.2, t5.2.3)
+
+t5.2.n <- rowSums(t5.2)
+t5.2 <- cbind(t5.2, t5.2.n)
+
+t5.2.prop <- (round(t5.2.n/wmd.123*100, 1))
+t5.2 <- cbind(t5.2, t5.2.prop)
+
+t5.2 <- as.data.frame(t5.2)
+
+t5.2 <- data.frame(
+  n = t5.2$'t5.2.n',
+  prop = t5.2$'t5.2.prop')
+
+row.names(t5.2) <- distance.rn
+
+
+# Satisfaction w/product
+t5.3.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SATPR1']))
+t5.3.1 <- t5.3.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+
+t5.3.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SATPR2']))
+
+t5.3.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SATPR3']))
+t5.3.3 <- rbind(t5.3.3, c(0, 0, 0, 0, 0)) # 'hard coded' a row as no one using a WMD as their third device responded 1 to SATPR3.
+
+t5.3 <- cbind(t5.3.1, t5.3.2, t5.3.3)
+
+t5.3.n <- rowSums(t5.3)
+t5.3 <- cbind(t5.3, t5.3.n)
+
+t5.3.prop <- (round(t5.3.n/wmd.123*100, 1))
+t5.3 <- cbind(t5.3, t5.3.prop)
+
+t5.3 <- as.data.frame(t5.3)
+
+t5.3 <- data.frame(
+  n = t5.3$'t5.3.n',
+  prop = t5.3$'t5.3.prop')
+
+rownames(t5.3) <- satisfaction.rn
+
+# Satisfaction w/assessment/training
+t5.4.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SVCPR1']))
+t5.4.1 <- t5.4.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+
+t5.4.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SVCPR2']))
+
+t5.4.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SVCPR3']))
+# t5.4.3 <- rbind(t5.4.3, c(0, 0, 0, 0, 0)) # 'hard coded' a row as no one using a WMD as their third device responded 1 to SVCPR3.
+
+
+t5.4 <- cbind(t5.4.1, t5.4.2, t5.4.3)
+
+t5.4.n <- rowSums(t5.4)
+t5.4 <- cbind(t5.4, t5.4.n)
+
+t5.4.prop <- (round(t5.4.n/wmd.123*100, 1))
+t5.4 <- cbind(t5.4, t5.4.prop)
+
+t5.4 <- as.data.frame(t5.4)
+
+t5.4 <- data.frame(
+  n = t5.4$'t5.4.n',
+  prop = t5.4$'t5.4.prop')
+
+rownames(t5.4) <- satisfaction6.rn
+
+# Satisfaction w/repair
+t5.5.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SATFU1']))
+t5.5.1 <- t5.5.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+
+t5.5.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SATFU2']))
+
+t5.5.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SATFU3']))
+
+t5.5 <- cbind(t5.5.1, t5.5.2, t5.5.3)
+
+t5.5.n <- rowSums(t5.5)
+t5.5 <- cbind(t5.5, t5.5.n)
+
+t5.5.prop <- (round(t5.5.n/wmd.123*100, 1))
+t5.5 <- cbind(t5.5, t5.5.prop)
+
+t5.5 <- as.data.frame(t5.5)
+
+t5.5 <- data.frame(
+  n = t5.5$'t5.5.n',
+  prop = t5.5$'t5.5.prop')
+
+rownames(t5.5) <- satisfaction6.rn
+
+# Suitability
+t5.6.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SUITPR1']))
+t5.6.1 <- t5.6.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+
+t5.6.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SUITPR2']))
+
+t5.6.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SUITPR3']))
+t5.6.3 <- rbind(t5.6.3, c(0, 0, 0, 0, 0)) # 'hard coded' a row as no one using a WMD as their third device responded 1 to SUITPR3.
+
+t5.6 <- cbind(t5.6.1, t5.6.2, t5.6.3)
+
+t5.6.n <- rowSums(t5.6)
+t5.6 <- cbind(t5.6, t5.6.n)
+
+t5.6.prop <- (round(t5.6.n/wmd.123*100, 1))
+t5.6 <- cbind(t5.6, t5.6.prop)
+
+t5.6 <- as.data.frame(t5.6)
+
+t5.6 <- data.frame(
+  n = t5.6$'t5.6.n',
+  prop = t5.6$'t5.6.prop')
+
+rownames(t5.6) <- suitable.rn
+
+# Want
+t5.7.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'UTILPR1']))
+t5.7.1 <- t5.7.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+
+t5.7.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'UTILPR2']))
+
+t5.7.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'UTILPR3']))
+
+t5.7 <- cbind(t5.7.1, t5.7.2, t5.7.3)
+
+t5.7.n <- rowSums(t5.7)
+t5.7 <- cbind(t5.7, t5.7.n)
+
+t5.7.prop <- (round(t5.7.n/wmd.123*100, 1))
+t5.7 <- cbind(t5.7, t5.7.prop)
+
+t5.7 <- as.data.frame(t5.7)
+
+t5.7 <- data.frame(
+  n = t5.7$'t5.7.n',
+  prop = t5.7$'t5.7.prop')
+
+rownames(t5.7) <- suitable.rn
+
+# Environments
+t5.8.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'ENVBAR1']))
+t5.8.1 <- t5.8.1[-1, ] # This var has 0s instead of blanks; delete row of 0s so aligns with n of rows in other tables
+t5.8.1 <- rbind(t5.8.1, c(0, 0, 0, 0, 0)) # hardcode row 6 (n/a) as no one answered n/a for ENVBAR1
+t5.8.1 <- t5.8.1[c(1, 2, 3, 4, 5, 7, 6), ]
+
+t5.8.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'ENVBAR2']))
+
+t5.8.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'ENVBAR3']))
+
+t5.8 <- cbind(t5.8.1, t5.8.2, t5.8.3)
+
+t5.8.n <- rowSums(t5.8)
+t5.8 <- cbind(t5.8, t5.8.n)
+
+t5.8.prop <- (round(t5.8.n/wmd.123*100, 1))
+t5.8 <- cbind(t5.8, t5.8.prop)
+
+t5.8 <- as.data.frame(t5.8)
+
+t5.8 <- data.frame(
+  n = t5.8$'t5.8.n',
+  prop = t5.8$'t5.8.prop')
+
+rownames(t5.8) <- suitable6.rn
+
+# Source
+## PROD1
+source1.1 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_1']))
+source1.2 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_2']))
+source1.3 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_3']))
+source1.4 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_4']))
+source1.5 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_5']))
+source1.87 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_87']))
+source1.88 <- t(table(world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'PROD1'], 
+                  world_table[which(world_table$PROD1 %in% c('104', '105', '106', '107', '120')), 'SOURCE1_88']))
+
+source1 <- rbind(source1.1, source1.2, source1.3, source1.4, source1.5, source1.87, source1.88)
+row.names(source1) <- c("na", "public.sector", "na", "NGO/charity", "na", "private.sector", "na", "friends/family", "na", "self-made", "na", "other", "na", "don't know")
+source1 <- as.data.frame(source1)
+source1 <- source1 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13))
+
+## PROD 2
+source2.1 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_1']))
+source2.2 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_2']))
+source2.3 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_3']))
+source2.4 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_4']))
+source2.5 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_5']))
+source2.87 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_87']))
+source2.88 <- t(table(world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'PROD2'], 
+                  world_table[which(world_table$PROD2 %in% c('104', '105', '106', '107', '120')), 'SOURCE2_88']))
+
+source2 <- rbind(source2.1, source2.2, source2.3, source2.4, source2.5, source2.87, source2.88)
+row.names(source2) <- c("na", "public.sector", "na", "NGO/charity", "na", "private.sector", "na", "friends/family", "na", "self-made", "na", "other", "na", "don't know")
+source2 <- as.data.frame(source2)
+source2 <- source2 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13))
+
+## PROD 3
+source3.1 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_1']))
+source3.2 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_2']))
+source3.3 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_3']))
+source3.4 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_4']))
+source3.5 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_5']))
+source3.87 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_87']))
+source3.88 <- t(table(world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'PROD3'], 
+                  world_table[which(world_table$PROD3 %in% c('104', '105', '106', '107', '120')), 'SOURCE3_88']))
+
+source3 <- rbind(source3.1, source3.2, source3.3, source3.4, source3.5, source3.87, source3.88)
+source3 <- rbind(source3, c(0, 0, 0, 0, 0)) # 'hard coded' a row as no one using a WMD as their third device responded 1 to SOURCE3_88. 
+
+row.names(source3) <- c("na", "public.sector", "na", "NGO/charity", "na", "private.sector", "na", "friends/family", "na", "self-made", "na", "other", "na", "don't know")
+source3 <- as.data.frame(source3)
+source3 <- source3 %>% filter(!row_number() %in% c(1, 3, 5, 7, 9, 11, 13))
+
+# Combine tables
+t5.9 <- cbind(source1, source2, source3)
+t5.9.n <- rowSums(t5.9)
+t5.9 <- cbind(t5.9, t5.9.n)
+
+t5.9.prop <- (round(t5.9.n/wmd.123*100, 1))
+t5.9 <- cbind(t5.9, t5.9.prop)
+t5.9 <- t5.9[ , -c(1:15)]
+colnames(t5.9) <- c("n", "prop")
+
+# Combine all tables
+t5 <- rbind(t5.1, t5.2, t5.3, t5.4, t5.5, t5.6, t5.7, t5.8, t5.9)
+
+# Add a title
+# kable(t5, caption = "Wheeled Mobility Device (WMD) Use Information, among individuals reporting a WMD as 1 of their top 3 devices")
+
+addWorksheet(wb, sheetName = "Table 5")
+writeDataTable(wb, sheet = "Table 5", x = as.data.frame(t5), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+saveWorkbook(wb, 'wmd.rata.tables.xlsx', overwrite = T)
+
+```
+
+# Part 6: Barriers
+
+```{r barriers, echo = FALSE}
+
+barriers.list <-c(sum(world_table$ANY.MFD == '1' & world_table$BARRIER_1 == '1'), 
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_2 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_3 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_4 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_5 == '1'), 
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_6 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_7 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_87 == '1'),
+                  sum(world_table$ANY.MFD == '1' & world_table$BARRIER_88 == '1')
+                  )
+
+## Create a list for proportions 
+bpl <- c(barriers.list/sum(world_table$ANY.MFD == 1))
+barriers.prop.list <- c(round((barriers.list / sum(world_table$ANY.MFD == '1')), 1))
+
+t6 <- data.frame(
+  barriers.n = barriers.list,
+  barriers.prop = round((barriers.list/mfd)*100, 1)
+)
+
+colnames(t6) <- c('n', '%')
+row.names(t6) <- barriers.rn
+
+
+addWorksheet(wb, sheetName = "Table 6")
+writeDataTable(wb, sheet = "Table 6", x = as.data.frame(t6), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+saveWorkbook(wb, 'wmd.rata.tables.xlsx', overwrite = T)
+```
+
