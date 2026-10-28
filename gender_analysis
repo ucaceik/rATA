@@ -1,1 +1,1881 @@
+---
+title: "rATA gender analysis"
+output: github_document
+---
+```{r setup, echo = FALSE}
+# Load packages
+    #  install.packages("readxl")
+    suppressWarnings(library(readxl))
+    #  install.packages("writexl")
+    suppressWarnings(library(writexl))
+    #  install.packages("openxlsx")
+    suppressWarnings(library(openxlsx))
+    # install.packages('ggplot2')
+    suppressWarnings(library(ggplot2))
+    # install.packages('dplyr')
+    suppressWarnings(library(dplyr))
+    # install.packages('plyr')
+    suppressWarnings(library(plyr))
+    # install.packages('table1')
+    suppressWarnings(library(table1))
+       #  install.packages("readxl", "writexl", "openxlsx")
+    library(readxl)
+    library(writexl)
+    library(openxlsx)
+    library(ggplot2)
+    library(dplyr)
 
+```
+```{r read in cleaned data, echo = FALSE}
+# Load datasets 
+    # set wd
+        gender_dir <- "C:/Users/Jamie Danemayer/Documents/Gender"
+        setwd(gender_dir)
+    # read in alles (This never works)
+        # alles <- read_xlsx(file.path(gender_dir, 'alles.xlsx'))
+
+```
+
+```{r cleaning with glasses, echo = FALSE}
+# Cleaning with glasses 
+    # Load datasets 
+        # set wd
+            gender_dir <- "C:/Users/Jamie Danemayer/Documents/Gender"
+            setwd(gender_dir)
+            
+        # Read in filter dataset 
+            filters <- read_xlsx(file.path(gender_dir, 'filters.xlsx'))
+
+        # Read in and ID country datasets
+            aze <- as.data.frame(read_xlsx(file.path(gender_dir, 'AZE_clean_w_children.xlsx')))
+                cc <- rep('aze', nrow(aze))
+                aze <- cbind(cc, aze)
+            bfa <- as.data.frame(read_xlsx(file.path(gender_dir, 'BFA_clean_w_children.xlsx')))
+                cc <- rep('bfa', nrow(bfa))
+                bfa <- cbind(cc, bfa)
+            chn <- as.data.frame(read_xlsx(file.path(gender_dir, 'CHN_clean_w_children.xlsx')))
+                cc <- rep('chn', nrow(chn))
+                chn <- cbind(cc, chn)
+            dji <- as.data.frame(read_xlsx(file.path(gender_dir, 'DJI_clean_w_children.xlsx')))
+                cc <- rep('dji', nrow(dji))
+                dji <- cbind(cc, dji)
+            dom <- as.data.frame(read_xlsx(file.path(gender_dir, 'DOM_clean_w_children.xlsx')))
+                cc <- rep('dom', nrow(dom))
+                dom <- cbind(cc, dom)
+            geo <- as.data.frame(read_xlsx(file.path(gender_dir, 'GEO_clean_w_children.xlsx')))
+                cc <- rep('geo', nrow(geo))
+                geo <- cbind(cc, geo)
+            idn <- as.data.frame(read_xlsx(file.path(gender_dir, 'IDN_clean_w_children.xlsx')))
+                cc <- rep('idn', nrow(idn))
+                idn <- cbind(cc, idn)
+            irn <- as.data.frame(read_xlsx(file.path(gender_dir, 'IRN_clean_w_children.xlsx')))
+                cc <- rep('irn', nrow(irn))
+                irn <- cbind(cc, irn)
+            irq <- as.data.frame(read_xlsx(file.path(gender_dir, 'IRQ_clean_w_children.xlsx')))
+                cc <- rep('irq', nrow(irq))
+                irq <- cbind(cc, irq)
+            ita <- as.data.frame(read_xlsx(file.path(gender_dir, 'ITA_clean_w_children.xlsx')))
+                cc <- rep('ita', nrow(ita))
+                ita <- cbind(cc, ita)
+            jor <- as.data.frame(read_xlsx(file.path(gender_dir, 'JOR_clean_w_children.xlsx')))
+                cc <- rep('jor', nrow(jor))
+                jor <- cbind(cc, jor)
+            ken <- as.data.frame(read_xlsx(file.path(gender_dir, 'KEN_clean_w_children.xlsx')))
+                cc <- rep('ken', nrow(ken))
+                ken <- cbind(cc, ken)
+            lbr <- as.data.frame(read_xlsx(file.path(gender_dir, 'LBR_clean_w_children.xlsx')))
+                cc <- rep('lbr', nrow(lbr))
+                lbr <- cbind(cc, lbr)
+            mdv <- as.data.frame(read_xlsx(file.path(gender_dir, 'MDV_clean_w_children.xlsx')))
+                cc <- rep('mdv', nrow(mdv))
+                mdv <- cbind(cc, mdv)
+            mmr <- as.data.frame(read_xlsx(file.path(gender_dir, 'MMR_clean_w_children.xlsx')))
+                cc <- rep('mmr', nrow(mmr))
+                mmr <- cbind(cc, mmr)
+            mng <- as.data.frame(read_xlsx(file.path(gender_dir, 'MNG_clean_w_children.xlsx')))
+                cc <- rep('mng', nrow(mng))
+                mng <- cbind(cc, mng)
+            mwi <- as.data.frame(read_xlsx(file.path(gender_dir, 'MWI_clean_w_children.xlsx')))
+                cc <- rep('mwi', nrow(mwi))
+                mwi <- cbind(cc, mwi)
+            npl <- as.data.frame(read_xlsx(file.path(gender_dir, 'NPL_clean_w_children.xlsx')))
+                cc <- rep('npl', nrow(npl))
+                npl <- cbind(cc, npl)
+            pol <- as.data.frame(read_xlsx(file.path(gender_dir, 'POL_clean_w_children.xlsx')))
+                cc <- rep('pol', nrow(pol))
+                pol <- cbind(cc, pol)
+            sen <- as.data.frame(read_xlsx(file.path(gender_dir, 'SEN_clean_w_children.xlsx')))
+                cc <- rep('sen', nrow(sen))
+                sen <- cbind(cc, sen)
+            swe <- as.data.frame(read_xlsx(file.path(gender_dir, 'SWE_clean_w_children.xlsx')))
+                cc <- rep('swe', nrow(swe))
+                swe <- cbind(cc, swe)
+            tgo <- as.data.frame(read_xlsx(file.path(gender_dir, 'TGO_clean_w_children.xlsx')))
+                cc <- rep('tgo', nrow(tgo))
+                tgo <- cbind(cc, tgo)
+            tjk <- as.data.frame(read_xlsx(file.path(gender_dir, 'TJK_clean_w_children.xlsx')))
+                cc <- rep('tjk', nrow(tjk))
+                tjk <- cbind(cc, tjk)
+            ukr <- as.data.frame(read_xlsx(file.path(gender_dir, 'UKR_clean_w_children.xlsx')))
+                cc <- rep('ukr', nrow(ukr))
+                ukr <- cbind(cc, ukr)
+
+        # list datasets
+            country_list <- list(aze, bfa, chn, dji, dom, geo, idn, irn, irq, ita, jor, ken, lbr, mdv, mmr, mng, mwi, npl, pol, sen, swe, tgo, tjk, ukr) 
+
+    # rbind datasets where columns are identical; fill rest in with NA
+        # plyr's rbind.fill can't handle date/time data, so remove this
+        # drop all cols with 'date' or 'DATE' in the name 
+            for (i in 1:length(country_list)) {
+                country_list[[i]] <- country_list[[i]][, -grep('date', colnames(country_list[[i]]), ignore.case = TRUE)]  # do double [[]] b/c it's a list
+            }
+            alles_og <- rbind.fill(country_list)
+            alles_og <- as.data.frame(alles_og)
+            nrow(alles_og)
+    # Missing data
+        # Drop respondent if missing/DNR in any part of functioning module 
+            alles <- alles_og[which(alles_og$MOBILITY %in% 0:3 & alles_og$SEEING %in% 0:3 & alles_og$HEARING %in% 0:3 & 
+                                alles_og$COMM %in% 0:3 & alles_og$REMEMB %in% 0:3 & alles_og$SELFCARE %in% 0:3 & 
+                                alles_og$AGE > -1 & alles_og$AGE < 130 &
+                                alles_og$SEX > -1), ] # 2 people have insanely coded ages 
+            nrow(alles)/nrow(alles_og) # 93.5
+            nrow(alles_og) - nrow(alles) # 15,185
+            table(alles$AGE)
+            table(alles$SEX)
+    # Add filter values 
+        # Create empty vars 
+            alles$country <- rep(NA, nrow(alles))
+            alles$region <- rep(NA, nrow(alles))
+            alles$hdi_score <- rep(NA, nrow(alles))
+            alles$hdi_value <- rep(NA, nrow(alles))
+            alles$hdi_rank <- rep(NA, nrow(alles))
+            alles$gdi_value <- rep(NA, nrow(alles))
+
+        # loop through ccs to add filter values to main dataset
+            for (i in unique(alles$cc)) {
+                that_country <- filters[which(filters$cc == i), 'country'] # take the filter value 
+                that_region <- filters[which(filters$cc == i), 'region']
+                that_hdi_score <- filters[which(filters$cc == i), 'hdi_score']
+                that_hdi_value <- filters[which(filters$cc == i), 'hdi_value']
+                that_hdi_rank <- filters[which(filters$cc == i), 'hdi_rank']
+                that_gdi_value <- filters[which(filters$cc == i), 'gdi_value']
+                
+                alles[which(alles$cc == i), 'country'] <- that_country # paste this value into the respective column for all rows with that cc in the main dataset
+                alles[which(alles$cc == i), 'region'] <- that_region
+                alles[which(alles$cc == i), 'hdi_score'] <- that_hdi_score
+                alles[which(alles$cc == i), 'hdi_value'] <- that_hdi_value
+                alles[which(alles$cc == i), 'hdi_rank'] <- that_hdi_rank
+                alles[which(alles$cc == i), 'gdi_value'] <- that_gdi_value
+            }
+        # Simplify hdi_score 
+            alles[which(alles$hdi_score == '1. Low'), 'hdi_score'] <- 'low'
+            alles[which(alles$hdi_score == '2. Medium'), 'hdi_score'] <- 'medium'
+            alles[which(alles$hdi_score == '3. High'), 'hdi_score'] <- 'high'
+            alles[which(alles$hdi_score == '4. Very high'), 'hdi_score'] <- 'vhigh'
+
+    # Add ID for our purposes
+        alles$rn <- 1:nrow(alles)
+        alles$id <- paste0(alles$cc, alles$rn)
+
+    # Add any fd
+        alles$any_fd <- rep(0, nrow(alles)) 
+        alles[which(alles$MOBILITY > 0 | alles$SEEING > 0 | alles$HEARING > 0 | alles$COMM > 0 | alles$REMEMB > 0 | alles$SELFCARE > 0), 'any_fd'] <- 1
+        alles$need2 <- rep(0, nrow(alles)) 
+        alles[which(alles$MOBILITY > 1 | alles$SEEING > 1 | alles$HEARING > 1 | alles$COMM > 1 | alles$REMEMB > 1 | alles$SELFCARE > 1), 'fd2'] <- 1
+    
+    # Add single fd 
+        alles$single_fd <- rep(0, nrow(alles))
+        alles[which(alles$MOBILITY > 0 & alles$SEEING == 0 & alles$HEARING == 0 & alles$COMM == 0 & alles$REMEMB == 0 & alles$SELFCARE == 0), 'single_fd'] <- 1
+        alles[which(alles$MOBILITY == 0 & alles$SEEING > 0 & alles$HEARING == 0 & alles$COMM == 0 & alles$REMEMB == 0 & alles$SELFCARE == 0), 'single_fd'] <- 1
+        alles[which(alles$MOBILITY == 0 & alles$SEEING == 0 & alles$HEARING > 0 & alles$COMM == 0 & alles$REMEMB == 0 & alles$SELFCARE == 0), 'single_fd'] <- 1
+        alles[which(alles$MOBILITY == 0 & alles$SEEING == 0 & alles$HEARING == 0 & alles$COMM > 0 & alles$REMEMB == 0 & alles$SELFCARE == 0), 'single_fd'] <- 1
+        alles[which(alles$MOBILITY == 0 & alles$SEEING == 0 & alles$HEARING == 0 & alles$COMM == 0 & alles$REMEMB > 0 & alles$SELFCARE == 0), 'single_fd'] <- 1
+        alles[which(alles$MOBILITY == 0 & alles$SEEING == 0 & alles$HEARING == 0 & alles$COMM == 0 & alles$REMEMB == 0 & alles$SELFCARE > 0), 'single_fd'] <- 1
+
+    # Add multiple fd 
+        alles$multi_fd <- rep('no multi', nrow(alles))
+        alles[which(alles$single_fd == 0 & alles$any_fd == 1), 'multi_fd'] <- 'has multi'
+    # One var for n of fds
+        alles$fdn <- rep('3.none', nrow(alles))
+        alles[which(alles$single_fd == 1), 'fdn'] <- '1.single'
+        alles[which(alles$multi_fd == 'has multi'), 'fdn'] <- '2.multiple'
+    # High vs low fd
+        alles$high_fd <- rep('3', nrow(alles))
+        alles[which(alles$MOBILITY > 2 | alles$SEEING > 2 | alles$HEARING > 2 | alles$COMM > 2 | alles$REMEMB > 2 | alles$SELFCARE), 'high_fd'] <- '1' # any reported difficulty is over 2
+        alles[which(alles$any_fd == 1 & alles$MOBILITY < 2 & alles$SEEING < 2 & alles$HEARING < 2 & alles$COMM < 2 & alles$REMEMB < 2 & alles$SELFCARE), 'high_fd'] <- '1' # difficulty IS reported, but it is under 2 in any/all cases (to compare to multiple FDs)
+    
+    # Drop glasses-related answers 
+        # vars_p1 <- c('SOURCE1', 'SOURCE1_1', 'SOURCE1_2', 'SOURCE1_3', 'SOURCE1_4', 'SOURCE1_5', 'SOURCE1_87', 'SOURCE1_88', 'SOURCE1o', 
+        #                 'PAYER1', 'PAYER1_1', 'PAYER1_2', 'PAYER1_3', 'PAYER1_4', 'PAYER1_5', 'PAYER1_6', 'PAYER1_87', 'PAYER1_88', 'PAYER1o', 
+        #                 'DISTKM1', 'SATPR1', 'SVCPR1', 'SATFU1', 'SUITPR1', 'UTILPR1', 'ENVBAR1')
+        # vars_p2 <- c('SOURCE2', 'SOURCE2_1', 'SOURCE2_2', 'SOURCE2_3', 'SOURCE2_4', 'SOURCE2_5', 'SOURCE2_87', 'SOURCE2_88', 'SOURCE2o', 
+        #                 'PAYER2', 'PAYER2_1', 'PAYER2_2', 'PAYER2_3', 'PAYER2_4', 'PAYER2_5', 'PAYER2_6', 'PAYER2_87', 'PAYER2_88', 'PAYER2o', 
+        #                 'DISTKM2', 'SATPR2', 'SVCPR2', 'SATFU2', 'SUITPR2', 'UTILPR2', 'ENVBAR2')
+        # vars_p3 <- c('SOURCE3', 'SOURCE3_1', 'SOURCE3_2', 'SOURCE3_3', 'SOURCE3_4', 'SOURCE3_5', 'SOURCE3_87', 'SOURCE3_88', 'SOURCE3o', 
+        #                 'PAYER3', 'PAYER3_1', 'PAYER3_2', 'PAYER3_3', 'PAYER3_4', 'PAYER3_5', 'PAYER3_6', 'PAYER3_87', 'PAYER3_88', 'PAYER3o', 
+        #                 'DISTKM3', 'SATPR3', 'SVCPR3', 'SATFU3', 'SUITPR3', 'UTILPR3', 'ENVBAR3')
+        
+        # # PROD1
+        # for (i in 1:nrow(alles)) {
+        #     if (!is.na(alles$PROD1[i]) && alles$PROD1[i] == 206) {
+        #         for (col in vars_p1) {
+        #             alles[i, col] <- 0
+        #         }
+        #     }
+        # }
+
+        # # PROD2
+        # for (i in 1:nrow(alles)) {
+        #     if (!is.na(alles$PROD2[i]) && alles$PROD2[i] == 206) {
+        #         for (col in vars_p2) {
+        #             alles[i, col] <- 0
+        #         }
+        #     }
+        # }
+
+        # # PROD3
+        # for (i in 1:nrow(alles)) {
+        #     if (!is.na(alles$PROD3[i]) && alles$PROD3[i] == 206) {
+        #         for (col in vars_p3) {
+        #             alles[i, col] <- 0
+        #         }
+        #     }
+        # }
+        
+        # # Change 1 to 0 in glasses columns for use and unmet need 
+        #     alles[which(alles$SEEINGQ_206 == 1), 'SEEINGQ_206'] <- 0
+        #     alles[which(alles$SEEINGU_206 == 1), 'SEEINGU_206'] <- 0
+
+        # # And if UNMET == 1 but list of cols are now all 0 after removing glasses, then delete barriers entries. 
+        #     barriers <- c('BARRIER_1', 'BARRIER_2', 'BARRIER_3', 'BARRIER_4', 'BARRIER_5', 'BARRIER_6', 'BARRIER_7', 'BARRIER_87', 'BARRIER_88', 'BARRIERo', 'BARRIER')
+        #         # MOBILITYU_101	MOBILITYU_102	MOBILITYU_103	MOBILITYU_104	MOBILITYU_105	MOBILITYU_106	MOBILITYU_107	MOBILITYU_108	MOBILITYU_109	MOBILITYU_110	MOBILITYU_111	MOBILITYU_112	MOBILITYU_113	MOBILITYU_114	MOBILITYU_115	MOBILITYU_116	MOBILITYU_117	MOBILITYU_118	MOBILITYU_119	MOBILITYU_120	SEEINGU_201	SEEINGU_202	SEEINGU_203	SEEINGU_204	SEEINGU_205	SEEINGU_206	SEEINGU_207	SEEINGU_208	SEEINGU_209	SEEINGU_210	SEEINGU_211	HEARINGU_301	HEARINGU_302	HEARINGU_303	HEARINGU_304	HEARINGU_305	HEARINGU_306	HEARINGU_307	COMMU_401	COMMU_402	COMMU_403	COMMU_404	REMEMBU_501	REMEMBU_502	REMEMBU_503	REMEMBU_504	REMEMBU_505	REMEMBU_506	REMEMBU_507	SELFCAREU_601	SELFCAREU_602	SELFCAREU_603	SELFCAREU_604	SELFCAREU_605	SELFCAREU_606	OTHERU
+
+        #     for (i in 1:nrow(alles)) {
+        #         if (alles$UNMET[i] == 1 && all(is.na(alles[i, c('MOBILITYU_101':'OTHERU']))) { # List of other devices in unmet cols
+        #             alles$UNMET[i] <- 0
+        #             alles[i, barriers] <- 0
+        #         }
+        #     }
+
+    # Add domain & any use 
+        # Mobility
+            alles$mob_use <- rep(0, nrow(alles))
+            alles$mob_sum <- rep(0, nrow(alles))
+            alles$mob_sum <- rowSums(alles[,c(108:127)])
+            alles[which(alles$mob_sum > 0), 'mob_use'] <- 1
+        # Vision
+            alles$vis_use <- rep(0, nrow(alles))
+            alles$vis_sum <- rep(0, nrow(alles))
+            alles$vis_sum <- rowSums(alles[,c(128:138)])
+            alles[which(alles$vis_sum > 0), 'vis_use'] <- 1
+        # Hearing
+            alles$hear_use <- rep(0, nrow(alles))
+            alles$hear_sum <- rep(0, nrow(alles))
+            alles$hear_sum <- rowSums(alles[,c(139:145)])
+            alles[which(alles$hear_sum > 0), 'hear_use'] <- 1
+        # Communication
+            alles$com_use <- rep(0, nrow(alles))
+            alles$com_sum <- rep(0, nrow(alles))
+            alles$com_sum <- rowSums(alles[,c(146:149)])
+            alles[which(alles$com_sum > 0), 'com_use'] <- 1
+        # Remembering
+            alles$rem_use <- rep(0, nrow(alles))
+            alles$rem_sum <- rep(0, nrow(alles))
+            alles$rem_sum <- rowSums(alles[,c(150:156)])
+            alles[which(alles$rem_sum > 0), 'rem_use'] <- 1    
+        # Self-care
+            alles$self_use <- rep(0, nrow(alles))
+            alles$self_sum <- rep(0, nrow(alles))
+            alles$self_sum <- rowSums(alles[,c(157:163)])
+            alles[which(alles$self_sum > 0), 'self_use'] <- 1
+        # Any use 
+            alles$any_use <- rep(0, nrow(alles))
+            alles[which(alles$mob_use > 0 | alles$vis_use > 0 | alles$hear_use > 0 | 
+                        alles$com_use > 0 | alles$rem_use > 0 | alles$self_use > 0), 'any_use'] <- 1
+
+    # Add domain & any unmet need 
+        # Mobility
+            alles$mob_unmet <- rep(0, nrow(alles))
+            alles$mob_sum <- rep(0, nrow(alles))
+            alles$mob_sum <- rowSums(alles[,c(163:182)])
+            alles[which(alles$mob_sum > 0), 'mob_unmet'] <- 1
+        # Vision
+            alles$vis_unmet <- rep(0, nrow(alles))
+            alles$vis_sum <- rep(0, nrow(alles))
+            alles$vis_sum <- rowSums(alles[,c(183:193)])
+            alles[which(alles$vis_sum > 0), 'vis_unmet'] <- 1
+        # Hearing
+            alles$hear_unmet <- rep(0, nrow(alles))
+            alles$hear_sum <- rep(0, nrow(alles))
+            alles$hear_sum <- rowSums(alles[,c(194:200)])
+            alles[which(alles$hear_sum > 0), 'hear_unmet'] <- 1
+        # Communication
+            alles$com_unmet <- rep(0, nrow(alles))
+            alles$com_sum <- rep(0, nrow(alles))
+            alles$com_sum <- rowSums(alles[,c(201:204)])
+            alles[which(alles$com_sum > 0), 'com_unmet'] <- 1
+        # Remembering
+            alles$rem_unmet <- rep(0, nrow(alles))
+            alles$rem_sum <- rep(0, nrow(alles))
+            alles$rem_sum <- rowSums(alles[,c(205:211)])
+            alles[which(alles$rem_sum > 0), 'rem_unmet'] <- 1    
+        # Self-care
+            alles$self_unmet <- rep(0, nrow(alles))
+            alles$self_sum <- rep(0, nrow(alles))
+            alles$self_sum <- rowSums(alles[,c(212:217)])
+            alles[which(alles$self_sum > 0), 'self_unmet'] <- 1
+        # Any unmet 
+            alles$any_unmet <- rep(0, nrow(alles))
+            alles[which(alles$mob_unmet > 0 | alles$vis_unmet > 0 | alles$hear_unmet > 0 | 
+                        alles$com_unmet > 0 | alles$rem_unmet > 0 | alles$self_unmet > 0), 'any_unmet'] <- 1
+    # Add met need and total need indicators 
+        # met need 
+        alles$met_need <- rep(0, nrow(alles))
+        alles[which(alles$any_use == 1 & alles$any_unmet == 0), 'any_met'] <- 1
+        # need 
+        alles$any_need <- rep(0, nrow(alles))
+        alles[which(alles$any_met == 1 | alles$any_unmet == 1), 'any_need'] <- 1
+
+
+    # Dichotomise satisfaction vars 
+        # Products
+        alles$dspr <- rep(0, nrow(alles))
+        alles[which(alles$SATPR1 %in% c(1,2)), 'dspr'] <- 1
+        alles[which(alles$SATPR2 %in% c(1,2)), 'dspr'] <- 1
+        alles[which(alles$SAPTPR3 %in% c(1,2)), 'dspr'] <- 1
+
+        # Assessment 
+        alles$dsas <- rep(0, nrow(alles))
+        alles[which(alles$SVCPR1 %in% c(1,2) | alles$SVCPR2 %in% c(1,2) | alles$SVCPR3 %in% c(1,2)), 'dsas'] <- 1
+        
+        # Follow-up 
+        alles$dsfu <- rep(0, nrow(alles))
+        alles[which(alles$SATFU1 %in% c(1,2) | alles$SATFU2 %in% c(1,2) | alles$SATFU3 %in% c(1,2)), 'dsfu'] <- 1
+
+    # Age groups 
+        # 3 main groups
+        alles$age3 <- rep('18-64', nrow(alles))
+        alles[which(alles$AGE < 18), 'age3'] <- '0-17'
+        alles[which(alles$AGE > 64), 'age3'] <- '65+'
+        # 10 year age groups 
+        alles$age10 <- rep(NA, nrow(alles))
+        alles[which(alles$AGE < 10), 'age10'] <- '0-9'
+        alles[which(alles$AGE > 9 & alles$AGE < 20), 'age10'] <- '10-19'
+        alles[which(alles$AGE > 19 & alles$AGE < 30), 'age10'] <- '20-29'
+        alles[which(alles$AGE > 29 & alles$AGE < 40), 'age10'] <- '30-39'
+        alles[which(alles$AGE > 39 & alles$AGE < 50), 'age10'] <- '40-49'
+        alles[which(alles$AGE > 49 & alles$AGE < 60), 'age10'] <- '50-59'
+        alles[which(alles$AGE > 59 & alles$AGE < 70), 'age10'] <- '60-69'
+        alles[which(alles$AGE > 69 & alles$AGE < 80), 'age10'] <- '70-79'
+        alles[which(alles$AGE >79), 'age10'] <- '80+'
+    # Age / 5 
+        # divide Age by 5 for models 
+        alles$ageby5 <- alles$AGE/5
+    # HDI / 0.005 
+        # divide hdi_value by 5 for models 
+        alles$hdiby5 <- alles$hdi_value/5
+    
+    # HDI reference group 
+        alles[which(alles$hdi_score == 'low'), 'hdi_score'] <- 'a_low'
+        alles[which(alles$hdi_score == 'medium'), 'hdi_score'] <- 'b_medium'
+        alles[which(alles$hdi_score == 'high'), 'hdi_score'] <- 'c_high'
+        alles[which(alles$hdi_score == 'vhigh'), 'hdi_score'] <- 'd_vhigh'
+
+    # Save 
+        # wg <- createWorkbook()
+        # addWorksheet(wg, sheetName = "alles") 
+        # writeDataTable(wg, sheet = "alles", x = as.data.frame(alles), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+        # saveWorkbook(wg, 'alles.xlsx', overwrite = T)
+
+    # Cleaned data: alles 
+```
+
+```{r cleaning WITHOUT glasses, echo = FALSE}
+# Cleaning WITHOUT glasses 
+    # Load datasets 
+        # set wd
+            gender_dir <- "C:/Users/Jamie Danemayer/Documents/Gender"
+            setwd(gender_dir)
+            
+        # Read in filter dataset 
+            filters <- read_xlsx(file.path(gender_dir, 'filters.xlsx'))
+
+        # Read in and ID country datasets
+            aze <- as.data.frame(read_xlsx(file.path(gender_dir, 'AZE_clean_w_children.xlsx')))
+                cc <- rep('aze', nrow(aze))
+                aze <- cbind(cc, aze)
+            bfa <- as.data.frame(read_xlsx(file.path(gender_dir, 'BFA_clean_w_children.xlsx')))
+                cc <- rep('bfa', nrow(bfa))
+                bfa <- cbind(cc, bfa)
+            chn <- as.data.frame(read_xlsx(file.path(gender_dir, 'CHN_clean_w_children.xlsx')))
+                cc <- rep('chn', nrow(chn))
+                chn <- cbind(cc, chn)
+            dji <- as.data.frame(read_xlsx(file.path(gender_dir, 'DJI_clean_w_children.xlsx')))
+                cc <- rep('dji', nrow(dji))
+                dji <- cbind(cc, dji)
+            dom <- as.data.frame(read_xlsx(file.path(gender_dir, 'DOM_clean_w_children.xlsx')))
+                cc <- rep('dom', nrow(dom))
+                dom <- cbind(cc, dom)
+            geo <- as.data.frame(read_xlsx(file.path(gender_dir, 'GEO_clean_w_children.xlsx')))
+                cc <- rep('geo', nrow(geo))
+                geo <- cbind(cc, geo)
+            idn <- as.data.frame(read_xlsx(file.path(gender_dir, 'IDN_clean_w_children.xlsx')))
+                cc <- rep('idn', nrow(idn))
+                idn <- cbind(cc, idn)
+            irn <- as.data.frame(read_xlsx(file.path(gender_dir, 'IRN_clean_w_children.xlsx')))
+                cc <- rep('irn', nrow(irn))
+                irn <- cbind(cc, irn)
+            irq <- as.data.frame(read_xlsx(file.path(gender_dir, 'IRQ_clean_w_children.xlsx')))
+                cc <- rep('irq', nrow(irq))
+                irq <- cbind(cc, irq)
+            ita <- as.data.frame(read_xlsx(file.path(gender_dir, 'ITA_clean_w_children.xlsx')))
+                cc <- rep('ita', nrow(ita))
+                ita <- cbind(cc, ita)
+            jor <- as.data.frame(read_xlsx(file.path(gender_dir, 'JOR_clean_w_children.xlsx')))
+                cc <- rep('jor', nrow(jor))
+                jor <- cbind(cc, jor)
+            ken <- as.data.frame(read_xlsx(file.path(gender_dir, 'KEN_clean_w_children.xlsx')))
+                cc <- rep('ken', nrow(ken))
+                ken <- cbind(cc, ken)
+            lbr <- as.data.frame(read_xlsx(file.path(gender_dir, 'LBR_clean_w_children.xlsx')))
+                cc <- rep('lbr', nrow(lbr))
+                lbr <- cbind(cc, lbr)
+            mdv <- as.data.frame(read_xlsx(file.path(gender_dir, 'MDV_clean_w_children.xlsx')))
+                cc <- rep('mdv', nrow(mdv))
+                mdv <- cbind(cc, mdv)
+            mmr <- as.data.frame(read_xlsx(file.path(gender_dir, 'MMR_clean_w_children.xlsx')))
+                cc <- rep('mmr', nrow(mmr))
+                mmr <- cbind(cc, mmr)
+            mng <- as.data.frame(read_xlsx(file.path(gender_dir, 'MNG_clean_w_children.xlsx')))
+                cc <- rep('mng', nrow(mng))
+                mng <- cbind(cc, mng)
+            mwi <- as.data.frame(read_xlsx(file.path(gender_dir, 'MWI_clean_w_children.xlsx')))
+                cc <- rep('mwi', nrow(mwi))
+                mwi <- cbind(cc, mwi)
+            npl <- as.data.frame(read_xlsx(file.path(gender_dir, 'NPL_clean_w_children.xlsx')))
+                cc <- rep('npl', nrow(npl))
+                npl <- cbind(cc, npl)
+            pol <- as.data.frame(read_xlsx(file.path(gender_dir, 'POL_clean_w_children.xlsx')))
+                cc <- rep('pol', nrow(pol))
+                pol <- cbind(cc, pol)
+            sen <- as.data.frame(read_xlsx(file.path(gender_dir, 'SEN_clean_w_children.xlsx')))
+                cc <- rep('sen', nrow(sen))
+                sen <- cbind(cc, sen)
+            swe <- as.data.frame(read_xlsx(file.path(gender_dir, 'SWE_clean_w_children.xlsx')))
+                cc <- rep('swe', nrow(swe))
+                swe <- cbind(cc, swe)
+            tgo <- as.data.frame(read_xlsx(file.path(gender_dir, 'TGO_clean_w_children.xlsx')))
+                cc <- rep('tgo', nrow(tgo))
+                tgo <- cbind(cc, tgo)
+            tjk <- as.data.frame(read_xlsx(file.path(gender_dir, 'TJK_clean_w_children.xlsx')))
+                cc <- rep('tjk', nrow(tjk))
+                tjk <- cbind(cc, tjk)
+            ukr <- as.data.frame(read_xlsx(file.path(gender_dir, 'UKR_clean_w_children.xlsx')))
+                cc <- rep('ukr', nrow(ukr))
+                ukr <- cbind(cc, ukr)
+
+        # list datasets
+            country_list <- list(aze, bfa, chn, dji, dom, geo, idn, irn, irq, ita, jor, ken, lbr, mdv, mmr, mng, mwi, npl, pol, sen, swe, tgo, tjk, ukr) 
+
+    # rbind datasets where columns are identical; fill rest in with NA
+        # plyr's rbind.fill can't handle date/time data, so remove this
+        # drop all cols with 'date' or 'DATE' in the name 
+            for (i in 1:length(country_list)) {
+                country_list[[i]] <- country_list[[i]][, -grep('date', colnames(country_list[[i]]), ignore.case = TRUE)]  # do double [[]] b/c it's a list
+            }
+            alles_g_og <- rbind.fill(country_list)
+            alles_g_og <- as.data.frame(alles_g_og)
+            nrow(alles_g_og)
+    # Missing data
+        # Drop respondent if missing/DNR in any part of functioning module 
+            alles_g <- alles_g_og[which(alles_g_og$MOBILITY %in% 0:3 & alles_g_og$SEEING %in% 0:3 & alles_g_og$HEARING %in% 0:3 & 
+                                alles_g_og$COMM %in% 0:3 & alles_g_og$REMEMB %in% 0:3 & alles_g_og$SELFCARE %in% 0:3 & 
+                                alles_g_og$AGE > -1 & alles_g_og$AGE < 130 &
+                                alles_g_og$SEX > -1), ] # 2 people have insanely coded ages 
+            nrow(alles_g)/nrow(alles_g_og) # 93.5
+            nrow(alles_g_og) - nrow(alles_g) # 15,185
+            table(alles_g$AGE)
+            table(alles_g$SEX)
+    # Add filter values 
+        # Create empty vars 
+            alles_g$country <- rep(NA, nrow(alles_g))
+            alles_g$region <- rep(NA, nrow(alles_g))
+            alles_g$hdi_score <- rep(NA, nrow(alles_g))
+            alles_g$hdi_value <- rep(NA, nrow(alles_g))
+            alles_g$hdi_rank <- rep(NA, nrow(alles_g))
+            alles_g$gdi_value <- rep(NA, nrow(alles_g))
+
+        # loop through ccs to add filter values to main dataset
+            for (i in unique(alles_g$cc)) {
+                that_country <- filters[which(filters$cc == i), 'country'] # take the filter value 
+                that_region <- filters[which(filters$cc == i), 'region']
+                that_hdi_score <- filters[which(filters$cc == i), 'hdi_score']
+                that_hdi_value <- filters[which(filters$cc == i), 'hdi_value']
+                that_hdi_rank <- filters[which(filters$cc == i), 'hdi_rank']
+                that_gdi_value <- filters[which(filters$cc == i), 'gdi_value']
+                
+                alles_g[which(alles_g$cc == i), 'country'] <- that_country # paste this value into the respective column for all rows with that cc in the main dataset
+                alles_g[which(alles_g$cc == i), 'region'] <- that_region
+                alles_g[which(alles_g$cc == i), 'hdi_score'] <- that_hdi_score
+                alles_g[which(alles_g$cc == i), 'hdi_value'] <- that_hdi_value
+                alles_g[which(alles_g$cc == i), 'hdi_rank'] <- that_hdi_rank
+                alles_g[which(alles_g$cc == i), 'gdi_value'] <- that_gdi_value
+            }
+        # Simplify hdi_score 
+            alles_g[which(alles_g$hdi_score == '1. Low'), 'hdi_score'] <- 'low'
+            alles_g[which(alles_g$hdi_score == '2. Medium'), 'hdi_score'] <- 'medium'
+            alles_g[which(alles_g$hdi_score == '3. High'), 'hdi_score'] <- 'high'
+            alles_g[which(alles_g$hdi_score == '4. Very high'), 'hdi_score'] <- 'vhigh'
+
+    # Add ID for our purposes
+        alles_g$rn <- 1:nrow(alles_g)
+        alles_g$id <- paste0(alles_g$cc, alles_g$rn)
+
+    # Add any fd
+        alles_g$any_fd <- rep(0, nrow(alles_g)) 
+        alles_g[which(alles_g$MOBILITY > 0 | alles_g$SEEING > 0 | alles_g$HEARING > 0 | alles_g$COMM > 0 | alles_g$REMEMB > 0 | alles_g$SELFCARE > 0), 'any_fd'] <- 1
+        alles_g$need2 <- rep(0, nrow(alles_g)) 
+        alles_g[which(alles_g$MOBILITY > 1 | alles_g$SEEING > 1 | alles_g$HEARING > 1 | alles_g$COMM > 1 | alles_g$REMEMB > 1 | alles_g$SELFCARE > 1), 'fd2'] <- 1
+    
+    # Add single fd 
+        alles_g$single_fd <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$MOBILITY > 0 & alles_g$SEEING == 0 & alles_g$HEARING == 0 & alles_g$COMM == 0 & alles_g$REMEMB == 0 & alles_g$SELFCARE == 0), 'single_fd'] <- 1
+        alles_g[which(alles_g$MOBILITY == 0 & alles_g$SEEING > 0 & alles_g$HEARING == 0 & alles_g$COMM == 0 & alles_g$REMEMB == 0 & alles_g$SELFCARE == 0), 'single_fd'] <- 1
+        alles_g[which(alles_g$MOBILITY == 0 & alles_g$SEEING == 0 & alles_g$HEARING > 0 & alles_g$COMM == 0 & alles_g$REMEMB == 0 & alles_g$SELFCARE == 0), 'single_fd'] <- 1
+        alles_g[which(alles_g$MOBILITY == 0 & alles_g$SEEING == 0 & alles_g$HEARING == 0 & alles_g$COMM > 0 & alles_g$REMEMB == 0 & alles_g$SELFCARE == 0), 'single_fd'] <- 1
+        alles_g[which(alles_g$MOBILITY == 0 & alles_g$SEEING == 0 & alles_g$HEARING == 0 & alles_g$COMM == 0 & alles_g$REMEMB > 0 & alles_g$SELFCARE == 0), 'single_fd'] <- 1
+        alles_g[which(alles_g$MOBILITY == 0 & alles_g$SEEING == 0 & alles_g$HEARING == 0 & alles_g$COMM == 0 & alles_g$REMEMB == 0 & alles_g$SELFCARE > 0), 'single_fd'] <- 1
+
+    # Add multiple fd 
+        alles_g$multi_fd <- rep('no multi', nrow(alles_g))
+        alles_g[which(alles_g$single_fd == 0 & alles_g$any_fd == 1), 'multi_fd'] <- 'has multi'
+    # One var for n of fds
+        alles_g$fdn <- rep('3.none', nrow(alles_g))
+        alles_g[which(alles_g$single_fd == 1), 'fdn'] <- '1.single'
+        alles_g[which(alles_g$multi_fd == 'has multi'), 'fdn'] <- '2.multiple'
+    # High vs low fd
+        alles_g$high_fd <- rep('3', nrow(alles_g))
+        alles_g[which(alles_g$MOBILITY > 2 | alles_g$SEEING > 2 | alles_g$HEARING > 2 | alles_g$COMM > 2 | alles_g$REMEMB > 2 | alles_g$SELFCARE), 'high_fd'] <- '1' # any reported difficulty is over 2
+        alles_g[which(alles_g$any_fd == 1 & alles_g$MOBILITY < 2 & alles_g$SEEING < 2 & alles_g$HEARING < 2 & alles_g$COMM < 2 & alles_g$REMEMB < 2 & alles_g$SELFCARE), 'high_fd'] <- '1' # difficulty IS reported, but it is under 2 in any/all cases (to compare to multiple FDs)
+    
+    # Drop glasses-related answers 
+        vars_p1 <- c('SOURCE1', 'SOURCE1_1', 'SOURCE1_2', 'SOURCE1_3', 'SOURCE1_4', 'SOURCE1_5', 'SOURCE1_87', 'SOURCE1_88', 'SOURCE1o', 
+                        'PAYER1', 'PAYER1_1', 'PAYER1_2', 'PAYER1_3', 'PAYER1_4', 'PAYER1_5', 'PAYER1_6', 'PAYER1_87', 'PAYER1_88', 'PAYER1o', 
+                        'DISTKM1', 'SATPR1', 'SVCPR1', 'SATFU1', 'SUITPR1', 'UTILPR1', 'ENVBAR1')
+        vars_p2 <- c('SOURCE2', 'SOURCE2_1', 'SOURCE2_2', 'SOURCE2_3', 'SOURCE2_4', 'SOURCE2_5', 'SOURCE2_87', 'SOURCE2_88', 'SOURCE2o', 
+                        'PAYER2', 'PAYER2_1', 'PAYER2_2', 'PAYER2_3', 'PAYER2_4', 'PAYER2_5', 'PAYER2_6', 'PAYER2_87', 'PAYER2_88', 'PAYER2o', 
+                        'DISTKM2', 'SATPR2', 'SVCPR2', 'SATFU2', 'SUITPR2', 'UTILPR2', 'ENVBAR2')
+        vars_p3 <- c('SOURCE3', 'SOURCE3_1', 'SOURCE3_2', 'SOURCE3_3', 'SOURCE3_4', 'SOURCE3_5', 'SOURCE3_87', 'SOURCE3_88', 'SOURCE3o', 
+                        'PAYER3', 'PAYER3_1', 'PAYER3_2', 'PAYER3_3', 'PAYER3_4', 'PAYER3_5', 'PAYER3_6', 'PAYER3_87', 'PAYER3_88', 'PAYER3o', 
+                        'DISTKM3', 'SATPR3', 'SVCPR3', 'SATFU3', 'SUITPR3', 'UTILPR3', 'ENVBAR3')
+        
+        # PROD1
+        for (i in 1:nrow(alles_g)) {
+            if (!is.na(alles_g$PROD1[i]) && alles_g$PROD1[i] == 206) {
+                for (col in vars_p1) {
+                    alles_g[i, col] <- 0
+                }
+            }
+        }
+
+        # PROD2
+        for (i in 1:nrow(alles_g)) {
+            if (!is.na(alles_g$PROD2[i]) && alles_g$PROD2[i] == 206) {
+                for (col in vars_p2) {
+                    alles_g[i, col] <- 0
+                }
+            }
+        }
+
+        # PROD3
+        for (i in 1:nrow(alles_g)) {
+            if (!is.na(alles_g$PROD3[i]) && alles_g$PROD3[i] == 206) {
+                for (col in vars_p3) {
+                    alles_g[i, col] <- 0
+                }
+            }
+        }
+        
+        # Change 1 to 0 in glasses columns for use and unmet need 
+            alles_g[which(alles_g$SEEINGQ_206 == 1), 'SEEINGQ_206'] <- 0
+            alles_g[which(alles_g$SEEINGU_206 == 1), 'SEEINGU_206'] <- 0
+
+        # And if UNMET == 1 but list of cols are now all 0 after removing glasses, then delete barriers entries. 
+            barriers <- c('BARRIER_1', 'BARRIER_2', 'BARRIER_3', 'BARRIER_4', 'BARRIER_5', 'BARRIER_6', 'BARRIER_7', 'BARRIER_87', 'BARRIER_88', 'BARRIERo', 'BARRIER')
+                # MOBILITYU_101	MOBILITYU_102	MOBILITYU_103	MOBILITYU_104	MOBILITYU_105	MOBILITYU_106	MOBILITYU_107	MOBILITYU_108	MOBILITYU_109	MOBILITYU_110	MOBILITYU_111	MOBILITYU_112	MOBILITYU_113	MOBILITYU_114	MOBILITYU_115	MOBILITYU_116	MOBILITYU_117	MOBILITYU_118	MOBILITYU_119	MOBILITYU_120	SEEINGU_201	SEEINGU_202	SEEINGU_203	SEEINGU_204	SEEINGU_205	SEEINGU_206	SEEINGU_207	SEEINGU_208	SEEINGU_209	SEEINGU_210	SEEINGU_211	HEARINGU_301	HEARINGU_302	HEARINGU_303	HEARINGU_304	HEARINGU_305	HEARINGU_306	HEARINGU_307	COMMU_401	COMMU_402	COMMU_403	COMMU_404	REMEMBU_501	REMEMBU_502	REMEMBU_503	REMEMBU_504	REMEMBU_505	REMEMBU_506	REMEMBU_507	SELFCAREU_601	SELFCAREU_602	SELFCAREU_603	SELFCAREU_604	SELFCAREU_605	SELFCAREU_606	OTHERU
+
+            for (i in 1:nrow(alles_g)) {
+                if (alles_g$UNMET[i] == 1 && all(is.na(alles_g[i, c('MOBILITYU_101':'OTHERU']))) { # List of other devices in unmet cols
+                    alles_g$UNMET[i] <- 0
+                    alles_g[i, barriers] <- 0
+                }
+            }
+
+    # Add domain & any use 
+        # Mobility
+            alles_g$mob_use <- rep(0, nrow(alles_g))
+            alles_g$mob_sum <- rep(0, nrow(alles_g))
+            alles_g$mob_sum <- rowSums(alles_g[,c(108:127)])
+            alles_g[which(alles_g$mob_sum > 0), 'mob_use'] <- 1
+        # Vision
+            alles_g$vis_use <- rep(0, nrow(alles_g))
+            alles_g$vis_sum <- rep(0, nrow(alles_g))
+            alles_g$vis_sum <- rowSums(alles_g[,c(128:138)])
+            alles_g[which(alles_g$vis_sum > 0), 'vis_use'] <- 1
+        # Hearing
+            alles_g$hear_use <- rep(0, nrow(alles_g))
+            alles_g$hear_sum <- rep(0, nrow(alles_g))
+            alles_g$hear_sum <- rowSums(alles_g[,c(139:145)])
+            alles_g[which(alles_g$hear_sum > 0), 'hear_use'] <- 1
+        # Communication
+            alles_g$com_use <- rep(0, nrow(alles_g))
+            alles_g$com_sum <- rep(0, nrow(alles_g))
+            alles_g$com_sum <- rowSums(alles_g[,c(146:149)])
+            alles_g[which(alles_g$com_sum > 0), 'com_use'] <- 1
+        # Remembering
+            alles_g$rem_use <- rep(0, nrow(alles_g))
+            alles_g$rem_sum <- rep(0, nrow(alles_g))
+            alles_g$rem_sum <- rowSums(alles_g[,c(150:156)])
+            alles_g[which(alles_g$rem_sum > 0), 'rem_use'] <- 1    
+        # Self-care
+            alles_g$self_use <- rep(0, nrow(alles_g))
+            alles_g$self_sum <- rep(0, nrow(alles_g))
+            alles_g$self_sum <- rowSums(alles_g[,c(157:163)])
+            alles_g[which(alles_g$self_sum > 0), 'self_use'] <- 1
+        # Any use 
+            alles_g$any_use <- rep(0, nrow(alles_g))
+            alles_g[which(alles_g$mob_use > 0 | alles_g$vis_use > 0 | alles_g$hear_use > 0 | 
+                        alles_g$com_use > 0 | alles_g$rem_use > 0 | alles_g$self_use > 0), 'any_use'] <- 1
+
+    # Add domain & any unmet need 
+        # Mobility
+            alles_g$mob_unmet <- rep(0, nrow(alles_g))
+            alles_g$mob_sum <- rep(0, nrow(alles_g))
+            alles_g$mob_sum <- rowSums(alles_g[,c(163:182)])
+            alles_g[which(alles_g$mob_sum > 0), 'mob_unmet'] <- 1
+        # Vision
+            alles_g$vis_unmet <- rep(0, nrow(alles_g))
+            alles_g$vis_sum <- rep(0, nrow(alles_g))
+            alles_g$vis_sum <- rowSums(alles_g[,c(183:193)])
+            alles_g[which(alles_g$vis_sum > 0), 'vis_unmet'] <- 1
+        # Hearing
+            alles_g$hear_unmet <- rep(0, nrow(alles_g))
+            alles_g$hear_sum <- rep(0, nrow(alles_g))
+            alles_g$hear_sum <- rowSums(alles_g[,c(194:200)])
+            alles_g[which(alles_g$hear_sum > 0), 'hear_unmet'] <- 1
+        # Communication
+            alles_g$com_unmet <- rep(0, nrow(alles_g))
+            alles_g$com_sum <- rep(0, nrow(alles_g))
+            alles_g$com_sum <- rowSums(alles_g[,c(201:204)])
+            alles_g[which(alles_g$com_sum > 0), 'com_unmet'] <- 1
+        # Remembering
+            alles_g$rem_unmet <- rep(0, nrow(alles_g))
+            alles_g$rem_sum <- rep(0, nrow(alles_g))
+            alles_g$rem_sum <- rowSums(alles_g[,c(205:211)])
+            alles_g[which(alles_g$rem_sum > 0), 'rem_unmet'] <- 1    
+        # Self-care
+            alles_g$self_unmet <- rep(0, nrow(alles_g))
+            alles_g$self_sum <- rep(0, nrow(alles_g))
+            alles_g$self_sum <- rowSums(alles_g[,c(212:217)])
+            alles_g[which(alles_g$self_sum > 0), 'self_unmet'] <- 1
+        # Any unmet 
+            alles_g$any_unmet <- rep(0, nrow(alles_g))
+            alles_g[which(alles_g$mob_unmet > 0 | alles_g$vis_unmet > 0 | alles_g$hear_unmet > 0 | 
+                        alles_g$com_unmet > 0 | alles_g$rem_unmet > 0 | alles_g$self_unmet > 0), 'any_unmet'] <- 1
+    # Add met need and total need indicators 
+        # met need 
+        alles_g$met_need <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$any_use == 1 & alles_g$any_unmet == 0), 'any_met'] <- 1
+        # need 
+        alles_g$any_need <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$any_met == 1 | alles_g$any_unmet == 1), 'any_need'] <- 1
+
+
+    # Dichotomise satisfaction vars 
+        # Products
+        alles_g$dspr <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$SATPR1 %in% c(1,2)), 'dspr'] <- 1
+        alles_g[which(alles_g$SATPR2 %in% c(1,2)), 'dspr'] <- 1
+        alles_g[which(alles_g$SAPTPR3 %in% c(1,2)), 'dspr'] <- 1
+
+        # Assessment 
+        alles_g$dsas <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$SVCPR1 %in% c(1,2) | alles_g$SVCPR2 %in% c(1,2) | alles_g$SVCPR3 %in% c(1,2)), 'dsas'] <- 1
+        
+        # Follow-up 
+        alles_g$dsfu <- rep(0, nrow(alles_g))
+        alles_g[which(alles_g$SATFU1 %in% c(1,2) | alles_g$SATFU2 %in% c(1,2) | alles_g$SATFU3 %in% c(1,2)), 'dsfu'] <- 1
+
+    # Age groups 
+        # 3 main groups
+        alles_g$age3 <- rep('18-64', nrow(alles_g))
+        alles_g[which(alles_g$AGE < 18), 'age3'] <- '0-17'
+        alles_g[which(alles_g$AGE > 64), 'age3'] <- '65+'
+        # 10 year age groups 
+        alles_g$age10 <- rep(NA, nrow(alles_g))
+        alles_g[which(alles_g$AGE < 10), 'age10'] <- '0-9'
+        alles_g[which(alles_g$AGE > 9 & alles_g$AGE < 20), 'age10'] <- '10-19'
+        alles_g[which(alles_g$AGE > 19 & alles_g$AGE < 30), 'age10'] <- '20-29'
+        alles_g[which(alles_g$AGE > 29 & alles_g$AGE < 40), 'age10'] <- '30-39'
+        alles_g[which(alles_g$AGE > 39 & alles_g$AGE < 50), 'age10'] <- '40-49'
+        alles_g[which(alles_g$AGE > 49 & alles_g$AGE < 60), 'age10'] <- '50-59'
+        alles_g[which(alles_g$AGE > 59 & alles_g$AGE < 70), 'age10'] <- '60-69'
+        alles_g[which(alles_g$AGE > 69 & alles_g$AGE < 80), 'age10'] <- '70-79'
+        alles_g[which(alles_g$AGE >79), 'age10'] <- '80+'
+    # Age / 5 
+        # divide Age by 5 for models 
+        alles_g$ageby5 <- alles_g$AGE/5
+    # HDI / 0.005 
+        # divide hdi_value by 5 for models 
+        alles_g$hdiby5 <- alles_g$hdi_value/5
+    # HDI reference group 
+        alles_g[which(alles_g$hdi_score == 'low'), 'hdi_score'] <- 'a_low'
+        alles_g[which(alles_g$hdi_score == 'medium'), 'hdi_score'] <- 'b_medium'
+        alles_g[which(alles_g$hdi_score == 'high'), 'hdi_score'] <- 'c_high'
+        alles_g[which(alles_g$hdi_score == 'vhigh'), 'hdi_score'] <- 'd_vhigh'
+    # Save 
+        # wg <- createWorkbook()
+        # addWorksheet(wg, sheetName = "alles_g") 
+        # writeDataTable(wg, sheet = "alles_g", x = as.data.frame(alles_g), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+        # saveWorkbook(wg, 'alles_g.xlsx', overwrite = T)
+
+    # Cleaned data: alles_g 
+```
+```{r table one all, echo = FALSE}
+# T1 for all 
+    # Age
+        label(alles$age10) <- 'Age (10-year groups)'
+    # Region
+        label(alles$region) <- 'WHO Region'
+        alles[which(alles$region == 'amr'), 'region'] <- 'Americas'
+        alles[which(alles$region == 'eur'), 'region'] <- 'Europe'
+        alles[which(alles$region == 'afr'), 'region'] <- 'Africa'
+        alles[which(alles$region == 'emr'), 'region'] <- 'Eastern Mediterranean'
+        alles[which(alles$region == 'sear'), 'region'] <- 'Southeast Asia'
+        alles[which(alles$region == 'wpr'), 'region'] <- 'Western Pacific'
+    # HDI
+        label(alles$hdi_score) <- 'HDI Score'
+        alles[which(alles$hdi_score == 'low'), 'hdi_score'] <- '1. Low'
+        alles[which(alles$hdi_score == 'medium'), 'hdi_score'] <- '2. Medium'
+        alles[which(alles$hdi_score == 'high'), 'hdi_score'] <- '3. High'
+        alles[which(alles$hdi_score == 'vhigh'), 'hdi_score'] <- '4. Very high'
+    # GDI
+        # label(alles$gdi_value) <- 'GDI Value Range'
+        # alles[which(alles$gdi_value < ... & gdi_value > ...), 'gdi_value'] <- '0.7-0.79' 
+        # need a range for this  
+    # Multi-need 
+        alles$fdn <- as.character(alles$fdn)
+        label(alles$multi_fd) <- 'Multiple difficulties'
+    # Any need
+        alles$any_need <- as.character(alles$any_need)
+        label(alles$any_need) <- 'Any need'
+        alles[which(alles$any_need == 1), 'any_need'] <- 'Yes'
+        alles[which(alles$any_need == 0), 'any_need'] <- 'No'
+    # Any use
+        alles$any_use <- as.character(alles$any_use)
+        label(alles$any_use) <- 'Any use'
+        alles[which(alles$any_use == 1), 'any_use'] <- 'Yes'
+        alles[which(alles$any_use == 0), 'any_use'] <- 'No'
+    # Any unmet need
+        alles$any_unmet <- as.character(alles$any_unmet)
+        label(alles$any_unmet) <- 'Any unmet unmet'
+        alles[which(alles$any_unmet == 1), 'any_unmet'] <- 'Yes'
+        alles[which(alles$any_unmet == 0), 'any_unmet'] <- 'No'
+    # Mobility
+        alles$MOBILITY <- as.character(alles$MOBILITY)
+        label(alles$MOBILITY) <- 'Mobility difficulty'
+        alles[which(alles$MOBILITY == '0'), 'MOBILITY'] <- '1. None'
+        alles[which(alles$MOBILITY == '1'), 'MOBILITY'] <- '2. Some'
+        alles[which(alles$MOBILITY == '2'), 'MOBILITY'] <- '3. A lot'
+        alles[which(alles$MOBILITY == '3'), 'MOBILITY'] <- '4. Cannot do at all'
+    # Vision
+        alles$SEEING <- as.character(alles$SEEING)
+        label(alles$SEEING) <- 'Seeing difficulty'
+        alles[which(alles$SEEING == '0'), 'SEEING'] <- '1. None'
+        alles[which(alles$SEEING == '1'), 'SEEING'] <- '2. Some'
+        alles[which(alles$SEEING == '2'), 'SEEING'] <- '3. A lot'
+        alles[which(alles$SEEING == '3'), 'SEEING'] <- '4. Cannot do at all'
+    # Hearing
+        alles$HEARING <- as.character(alles$HEARING)
+        label(alles$HEARING) <- 'Hearing difficulty'
+        alles[which(alles$HEARING == '0'), 'HEARING'] <- '1. None'
+        alles[which(alles$HEARING == '1'), 'HEARING'] <- '2. Some'
+        alles[which(alles$HEARING == '2'), 'HEARING'] <- '3. A lot'
+        alles[which(alles$HEARING == '3'), 'HEARING'] <- '4. Cannot do at all'
+    # Communication
+        alles$COMM <- as.character(alles$COMM)
+        label(alles$COMM) <- 'Communication difficulty'
+        alles[which(alles$COMM == '0'), 'COMM'] <- '1. None'
+        alles[which(alles$COMM == '1'), 'COMM'] <- '2. Some'
+        alles[which(alles$COMM == '2'), 'COMM'] <- '3. A lot'
+        alles[which(alles$COMM == '3'), 'COMM'] <- '4. Cannot do at all'
+
+    # Remembering
+        alles$REMEMB <- as.character(alles$REMEMB)
+        label(alles$REMEMB) <- 'Remembering difficulty'
+        alles[which(alles$REMEMB == '0'), 'REMEMB'] <- '1. None'
+        alles[which(alles$REMEMB == '1'), 'REMEMB'] <- '2. Some'
+        alles[which(alles$REMEMB == '2'), 'REMEMB'] <- '3. A lot'
+        alles[which(alles$REMEMB == '3'), 'REMEMB'] <- '4. Cannot do at all'
+
+    # Self-care 
+        alles$SELFCARE <- as.character(alles$SELFCARE)
+        label(alles$SELFCARE) <- 'Self-care difficulty'
+        alles[which(alles$SELFCARE == '0'), 'SELFCARE'] <- '1. None'
+        alles[which(alles$SELFCARE == '1'), 'SELFCARE'] <- '2. Some'
+        alles[which(alles$SELFCARE == '2'), 'SELFCARE'] <- '3. A lot'
+        alles[which(alles$SELFCARE == '3'), 'SELFCARE'] <- '4. Cannot do at all'
+
+    # Country
+        label(alles$country) <- 'Country'
+
+    # Make da table
+        t1all <- table1(~ age10 + region + hdi_score # + gdi_value 
+                        any_need + any_use + any_unmet + any_fd + fdn
+                        + MOBILITY + SEEING + HEARING + COMM + REMEMB + SELFCARE
+                        + country, data=alles)
+        print(t1all)
+
+# Save output table
+    g1 <- createWorkbook()
+    addWorksheet(g1, sheetName = "all") 
+    writeDataTable(g1, sheet = "all", x = as.data.frame(t1all), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+    saveWorkbook(g1, 't1all.xlsx', overwrite = T)
+
+```
+```{r access table, echo = FALSE}
+# Males 
+  m1 <- alles[which(alles$SEX == 1 & alles$age3 == '0-17'), ]
+  m2 <- alles[which(alles$SEX == 1 & alles$age3 == '18-64'), ]
+  m3 <- alles[which(alles$SEX == 1 & alles$age3 == '65+'), ]  
+
+  am1 <- nrow(m1[which(m1$any_met == 1), ]) / nrow(m1[which(m1$any_need == 1), ]) 
+  am2 <- nrow(m2[which(m2$any_met == 1), ]) / nrow(m2[which(m2$any_need == 1), ]) 
+  am3 <- nrow(m3[which(m3$any_met == 1), ]) / nrow(m3[which(m3$any_need == 1), ]) 
+# Females
+  f1 <- alles[which(alles$SEX == 2 & alles$age3 == '0-17'), ]
+  f2 <- alles[which(alles$SEX == 2 & alles$age3 == '18-64'), ]
+  f3 <- alles[which(alles$SEX == 2 & alles$age3 == '65+'), ]  
+
+  af1 <- nrow(f1[which(f1$any_met == 1), ]) / nrow(f1[which(f1$any_need == 1), ]) 
+  af2 <- nrow(f2[which(f2$any_met == 1), ]) / nrow(f2[which(f2$any_need == 1), ]) 
+  af3 <- nrow(f3[which(f3$any_met == 1), ]) / nrow(f3[which(f3$any_need == 1), ]) 
+
+# Table 
+  age3_list <- c('ages', '2-17', '18-64', '65+')
+  male_access <- c('males', am1, am2, am3)
+  female_access <- c('females', af1, af2, af3)
+  access <- cbind(age3_list, male_access, female_access)
+  # Save 
+    wa <- createWorkbook()
+    addWorksheet(wa, sheetName = "gender_access") 
+    writeDataTable(wa, sheet = "gender_access", x = as.data.frame(access), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+    saveWorkbook(wa, 'gender_access.xlsx', overwrite = T)
+
+```
+
+```{r table one f, echo = FALSE}
+# T1 for females 
+    # subset data for women and others
+        allesw <- alles[which(alles$SEX == 2), ]
+    # Age
+        label(allesw$age10) <- 'Age (10-year groups)'
+    # Region
+        label(allesw$region) <- 'WHO Region'
+        allesw[which(allesw$region == 'amr'), 'region'] <- 'Americas'
+        allesw[which(allesw$region == 'eur'), 'region'] <- 'Europe'
+        allesw[which(allesw$region == 'afr'), 'region'] <- 'Africa'
+        allesw[which(allesw$region == 'emr'), 'region'] <- 'Eastern Mediterranean'
+        allesw[which(allesw$region == 'sear'), 'region'] <- 'Southeast Asia'
+        allesw[which(allesw$region == 'wpr'), 'region'] <- 'Western Pacific'
+    # HDI
+        label(allesw$hdi_score) <- 'HDI Score'
+        allesw[which(allesw$hdi_score == 'low'), 'hdi_score'] <- '1. Low'
+        allesw[which(allesw$hdi_score == 'medium'), 'hdi_score'] <- '2. Medium'
+        allesw[which(allesw$hdi_score == 'high'), 'hdi_score'] <- '3. High'
+        allesw[which(allesw$hdi_score == 'vhigh'), 'hdi_score'] <- '4. Very high'
+    # GDI
+        # label(allesw$gdi_value) <- 'GDI Value Range'
+        # allesw[which(allesw$gdi_value < ... & gdi_value > ...), 'gdi_value'] <- '0.7-0.79' 
+        # need a range for this  
+    # Multi-need 
+        allesw$needn <- as.character(allesw$needn)
+        label(allesw$multi_need) <- 'Multiple difficulties'
+    # Any fd
+        allesw$any_fd <- as.character(allesw$any_fd)
+        label(allesw$any_fd) <- 'Any difficulty'
+        allesw[which(allesw$any_fd == 1), 'any_fd'] <- 'Yes'
+        allesw[which(allesw$any_fd == 0), 'any_fd'] <- 'No'
+    # Any use
+        allesw$any_use <- as.character(allesw$any_use)
+        label(allesw$any_use) <- 'Any use'
+        allesw[which(allesw$any_use == 1), 'any_use'] <- 'Yes'
+        allesw[which(allesw$any_use == 0), 'any_use'] <- 'No'
+    # Any unmet need
+        allesw$any_unmet <- as.character(allesw$any_unmet)
+        label(allesw$any_unmet) <- 'Any unmet unmet'
+        allesw[which(allesw$any_unmet == 1), 'any_unmet'] <- 'Yes'
+        allesw[which(allesw$any_unmet == 0), 'any_unmet'] <- 'No'
+    # Mobility
+        allesw$MOBILITY <- as.character(allesw$MOBILITY)
+        label(allesw$MOBILITY) <- 'Mobility difficulty'
+        allesw[which(allesw$MOBILITY == '0'), 'MOBILITY'] <- '1. None'
+        allesw[which(allesw$MOBILITY == '1'), 'MOBILITY'] <- '2. Some'
+        allesw[which(allesw$MOBILITY == '2'), 'MOBILITY'] <- '3. A lot'
+        allesw[which(allesw$MOBILITY == '3'), 'MOBILITY'] <- '4. Cannot do at all'
+    # Vision
+        allesw$SEEING <- as.character(allesw$SEEING)
+        label(allesw$SEEING) <- 'Seeing difficulty'
+        allesw[which(allesw$SEEING == '0'), 'SEEING'] <- '1. None'
+        allesw[which(allesw$SEEING == '1'), 'SEEING'] <- '2. Some'
+        allesw[which(allesw$SEEING == '2'), 'SEEING'] <- '3. A lot'
+        allesw[which(allesw$SEEING == '3'), 'SEEING'] <- '4. Cannot do at all'
+    # Hearing
+        allesw$HEARING <- as.character(allesw$HEARING)
+        label(allesw$HEARING) <- 'Hearing difficulty'
+        allesw[which(allesw$HEARING == '0'), 'HEARING'] <- '1. None'
+        allesw[which(allesw$HEARING == '1'), 'HEARING'] <- '2. Some'
+        allesw[which(allesw$HEARING == '2'), 'HEARING'] <- '3. A lot'
+        allesw[which(allesw$HEARING == '3'), 'HEARING'] <- '4. Cannot do at all'
+    # Communication
+        allesw$COMM <- as.character(allesw$COMM)
+        label(allesw$COMM) <- 'Communication difficulty'
+        allesw[which(allesw$COMM == '0'), 'COMM'] <- '1. None'
+        allesw[which(allesw$COMM == '1'), 'COMM'] <- '2. Some'
+        allesw[which(allesw$COMM == '2'), 'COMM'] <- '3. A lot'
+        allesw[which(allesw$COMM == '3'), 'COMM'] <- '4. Cannot do at all'
+
+    # Remembering
+        allesw$REMEMB <- as.character(allesw$REMEMB)
+        label(allesw$REMEMB) <- 'Remembering difficulty'
+        allesw[which(allesw$REMEMB == '0'), 'REMEMB'] <- '1. None'
+        allesw[which(allesw$REMEMB == '1'), 'REMEMB'] <- '2. Some'
+        allesw[which(allesw$REMEMB == '2'), 'REMEMB'] <- '3. A lot'
+        allesw[which(allesw$REMEMB == '3'), 'REMEMB'] <- '4. Cannot do at all'
+
+    # Self-care 
+        allesw$SELFCARE <- as.character(allesw$SELFCARE)
+        label(allesw$SELFCARE) <- 'Self-care difficulty'
+        allesw[which(allesw$SELFCARE == '0'), 'SELFCARE'] <- '1. None'
+        allesw[which(allesw$SELFCARE == '1'), 'SELFCARE'] <- '2. Some'
+        allesw[which(allesw$SELFCARE == '2'), 'SELFCARE'] <- '3. A lot'
+        allesw[which(allesw$SELFCARE == '3'), 'SELFCARE'] <- '4. Cannot do at all'
+
+
+    # Country
+        label(allesw$country) <- 'Country'
+
+    # Make da table
+        t1f <- table1(~ age10 + region + hdi_score # + gdi_value 
+                        + needn + any_need + any_use + any_unmet 
+                        + MOBILITY + SEEING + HEARING + COMM + REMEMB + SELFCARE
+                        + country, data=allesw)
+        print(t1f)
+
+# Save output table
+    f1 <- createWorkbook()
+    addWorksheet(f1, sheetName = "females") 
+    writeDataTable(f1, sheet = "females", x = as.data.frame(t1f), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+    saveWorkbook(f1, 't1f.xlsx', overwrite = T)
+
+```
+```{r table one m, echo = FALSE}
+# T1 for males 
+    # subset data for women and others
+        allesm <- alles[which(alles$SEX == 1), ]
+    # Age
+        label(allesm$age10) <- 'Age (10-year groups)'
+    # Region
+        label(allesm$region) <- 'WHO Region'
+        allesm[which(allesm$region == 'amr'), 'region'] <- 'Americas'
+        allesm[which(allesm$region == 'eur'), 'region'] <- 'Europe'
+        allesm[which(allesm$region == 'afr'), 'region'] <- 'Africa'
+        allesm[which(allesm$region == 'emr'), 'region'] <- 'Eastern Mediterranean'
+        allesm[which(allesm$region == 'sear'), 'region'] <- 'Southeast Asia'
+        allesm[which(allesm$region == 'wpr'), 'region'] <- 'Western Pacific'
+    # HDI
+        label(allesm$hdi_score) <- 'HDI Score'
+        allesm[which(allesm$hdi_score == 'low'), 'hdi_score'] <- '1. Low'
+        allesm[which(allesm$hdi_score == 'medium'), 'hdi_score'] <- '2. Medium'
+        allesm[which(allesm$hdi_score == 'high'), 'hdi_score'] <- '3. High'
+        allesm[which(allesm$hdi_score == 'vhigh'), 'hdi_score'] <- '4. Very high'
+    # GDI
+        # label(allesm$gdi_value) <- 'GDI Value Range'
+        # allesm[which(allesm$gdi_value < ... & gdi_value > ...), 'gdi_value'] <- '0.7-0.79' 
+        # need a range for this     
+    # Multi-need 
+        allesm$needn <- as.character(allesm$needn)
+        label(allesm$multi_need) <- 'Multiple difficulties'
+    # Any need
+        allesm$any_need <- as.character(allesm$any_need)
+        label(allesm$any_need) <- 'Any difficulty'
+        allesm[which(allesm$any_need == 1), 'any_need'] <- 'Yes'
+        allesm[which(allesm$any_need == 0), 'any_need'] <- 'No'
+    # Any use
+        allesm$any_use <- as.character(allesm$any_use)
+        label(allesm$any_use) <- 'Any use'
+        allesm[which(allesm$any_use == 1), 'any_use'] <- 'Yes'
+        allesm[which(allesm$any_use == 0), 'any_use'] <- 'No'
+    # Any unmet need
+        allesm$any_unmet <- as.character(allesm$any_unmet)
+        label(allesm$any_unmet) <- 'Any unmet unmet'
+        allesm[which(allesm$any_unmet == 1), 'any_unmet'] <- 'Yes'
+        allesm[which(allesm$any_unmet == 0), 'any_unmet'] <- 'No'
+    # Mobility
+        allesm$MOBILITY <- as.character(allesm$MOBILITY)
+        label(allesm$MOBILITY) <- 'Mobility difficulty'
+        allesm[which(allesm$MOBILITY == '0'), 'MOBILITY'] <- '1. None'
+        allesm[which(allesm$MOBILITY == '1'), 'MOBILITY'] <- '2. Some'
+        allesm[which(allesm$MOBILITY == '2'), 'MOBILITY'] <- '3. A lot'
+        allesm[which(allesm$MOBILITY == '3'), 'MOBILITY'] <- '4. Cannot do at all'
+    # Vision
+        allesm$SEEING <- as.character(allesm$SEEING)
+        label(allesm$SEEING) <- 'Seeing difficulty'
+        allesm[which(allesm$SEEING == '0'), 'SEEING'] <- '1. None'
+        allesm[which(allesm$SEEING == '1'), 'SEEING'] <- '2. Some'
+        allesm[which(allesm$SEEING == '2'), 'SEEING'] <- '3. A lot'
+        allesm[which(allesm$SEEING == '3'), 'SEEING'] <- '4. Cannot do at all'
+    # Hearing
+        allesm$HEARING <- as.character(allesm$HEARING)
+        label(allesm$HEARING) <- 'Hearing difficulty'
+        allesm[which(allesm$HEARING == '0'), 'HEARING'] <- '1. None'
+        allesm[which(allesm$HEARING == '1'), 'HEARING'] <- '2. Some'
+        allesm[which(allesm$HEARING == '2'), 'HEARING'] <- '3. A lot'
+        allesm[which(allesm$HEARING == '3'), 'HEARING'] <- '4. Cannot do at all'
+    # Communication
+        allesm$COMM <- as.character(allesm$COMM)
+        label(allesm$COMM) <- 'Communication difficulty'
+        allesm[which(allesm$COMM == '0'), 'COMM'] <- '1. None'
+        allesm[which(allesm$COMM == '1'), 'COMM'] <- '2. Some'
+        allesm[which(allesm$COMM == '2'), 'COMM'] <- '3. A lot'
+        allesm[which(allesm$COMM == '3'), 'COMM'] <- '4. Cannot do at all'
+
+    # Remembering
+        allesm$REMEMB <- as.character(allesm$REMEMB)
+        label(allesm$REMEMB) <- 'Remembering difficulty'
+        allesm[which(allesm$REMEMB == '0'), 'REMEMB'] <- '1. None'
+        allesm[which(allesm$REMEMB == '1'), 'REMEMB'] <- '2. Some'
+        allesm[which(allesm$REMEMB == '2'), 'REMEMB'] <- '3. A lot'
+        allesm[which(allesm$REMEMB == '3'), 'REMEMB'] <- '4. Cannot do at all'
+
+    # Self-care 
+        allesm$SELFCARE <- as.character(allesm$SELFCARE)
+        label(allesm$SELFCARE) <- 'Self-care difficulty'
+        allesm[which(allesm$SELFCARE == '0'), 'SELFCARE'] <- '1. None'
+        allesm[which(allesm$SELFCARE == '1'), 'SELFCARE'] <- '2. Some'
+        allesm[which(allesm$SELFCARE == '2'), 'SELFCARE'] <- '3. A lot'
+        allesm[which(allesm$SELFCARE == '3'), 'SELFCARE'] <- '4. Cannot do at all'
+
+
+    # Country
+        label(allesm$country) <- 'Country'
+
+    # Make da table
+        t1m <- table1(~ age10 + region + hdi_score # + gdi_value 
+                        + needn + any_need + any_use + any_unmet 
+                        + MOBILITY + SEEING + HEARING + COMM + REMEMB + SELFCARE
+                        + country, data=allesm)
+        print(t1m)
+
+# Save output table
+    m1 <- createWorkbook()
+    addWorksheet(m1, sheetName = "males") 
+    writeDataTable(m1, sheet = "males", x = as.data.frame(t1m), colNames = T, rowNames = T, tableStyle = 'TableStyleLight11')
+    saveWorkbook(m1, 't1m.xlsx', overwrite = T)
+
+```
+```{r Use, echo = FALSE}
+# Use, males x females, 1 plot per HDI score group 
+    # Low HDI
+        # males 
+            # subset data
+            lm <- alles[which(alles$hdi_score == 'low' & alles$SEX == 1), ]
+            table(alles$hdi_score)
+            # calculate proportions
+            use_low_males <- table(lm$any_use, lm$age10)
+            ulmcs <- colSums(use_low_males)
+            ulm <- rbind(use_low_males, ulmcs)
+            no_use <- ulm[1, ]
+            use <- ulm[2, ]
+            use_perc <- as.numeric(round((ulm[2, ]/ulm[3, ])*100, 2))
+            # add labels 
+            table(alles$hdi_score)
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Male (low HDI)', 9)
+            ulmp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            ulmp_df <- as.data.frame(ulmp_df)
+            ulmp_df$use_perc <- as.numeric(ulmp_df$use_perc)
+
+        # females
+            # subset data 
+            lf <- alles[which(alles$hdi_score == 'low' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            use_low_females <- table(lf$any_use, lf$age10)
+            ulfcs <- colSums(use_low_females)
+            ulf <- rbind(use_low_females, ulfcs)
+            no_use <- ulf[1, ]
+            use <- ulf[2, ]
+            use_perc <- as.numeric(round((ulf[2, ]/ulf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Female (low HDI)', 9)
+            ulfp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            ulfp_df <- as.data.frame(ulfp_df)
+            ulfp_df$use_perc <- as.numeric(ulfp_df$use_perc)
+
+    # Medium HDI
+        # males 
+            # subset data
+            mm <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 1), ]
+            table(alles$hdi_score)
+            # calculate proportions
+            use_med_males <- table(mm$any_use, mm$age10)
+            ummcs <- colSums(use_med_males)
+            umm <- rbind(use_med_males, ummcs)
+            no_use <- umm[1, ]
+            use <- umm[2, ]
+            use_perc <- as.numeric(round((umm[2, ]/umm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Male (med HDI)', 9)
+            ummp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            ummp_df <- as.data.frame(ummp_df)
+            ummp_df$use_perc <- as.numeric(ummp_df$use_perc)
+
+        # females
+            # subset data 
+            mf <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            use_med_females <- table(mf$any_use, mf$age10)
+            umfcs <- colSums(use_med_females)
+            umf <- rbind(use_med_females, umfcs)
+            no_use <- umf[1, ]
+            use <- umf[2, ]
+            use_perc <- as.numeric(round((umf[2, ]/umf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Female (med HDI)', 9)
+            umfp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            umfp_df <- as.data.frame(umfp_df)
+            umfp_df$use_perc <- as.numeric(umfp_df$use_perc)
+
+    # High HDI
+            # males 
+            # subset data
+            hm <- alles[which(alles$hdi_score == 'high' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            use_high_males <- table(hm$any_use, hm$age10)
+            uhmcs <- colSums(use_high_males)
+            uhm <- rbind(use_high_males, uhmcs)
+            no_use <- uhm[1, ]
+            use <- uhm[2, ]
+            use_perc <- as.numeric(round((uhm[2, ]/uhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Male (high HDI)', 9)
+            uhmp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            uhmp_df <- as.data.frame(uhmp_df)
+            uhmp_df$use_perc <- as.numeric(uhmp_df$use_perc)
+
+        # females
+            # subset data 
+            hf <- alles[which(alles$hdi_score == 'high' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            use_high_females <- table(hf$any_use, hf$age10)
+            uhfcs <- colSums(use_high_females)
+            uhf <- rbind(use_high_females, uhfcs)
+            no_use <- uhf[1, ]
+            use <- uhf[2, ]
+            use_perc <- as.numeric(round((uhf[2, ]/uhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Female (high HDI)', 9)
+            uhfp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            uhfp_df <- as.data.frame(uhfp_df)
+            uhfp_df$use_perc <- as.numeric(uhfp_df$use_perc)
+
+    # Very high HDI
+        # males 
+            # subset data
+            vhm <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            use_vhigh_males <- table(vhm$any_use, vhm$age10)
+            uvhmcs <- colSums(use_vhigh_males)
+            uvhm <- rbind(use_vhigh_males, uvhmcs)
+            no_use <- uvhm[1, ]
+            use <- uvhm[2, ]
+            use_perc <- as.numeric(round((uvhm[2, ]/uvhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Male (vhigh HDI)', 9)
+            uvhmp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            uvhmp_df <- as.data.frame(uvhmp_df)
+            uvhmp_df$use_perc <- as.numeric(uvhmp_df$use_perc)
+
+        # females
+            # subset data 
+            vhf <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            use_vhigh_females <- table(vhf$any_use, vhf$age10)
+            uvhfcs <- colSums(use_vhigh_females)
+            uvhf <- rbind(use_vhigh_females, uvhfcs)
+            no_use <- uvhf[1, ]
+            use <- uvhf[2, ]
+            use_perc <- as.numeric(round((uvhf[2, ]/uvhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('Female (vhigh HDI)', 9)
+            uvhfp_df <- cbind(age_groups, use, no_use, use_perc, category)
+            
+            # convert to df and numeric
+            uvhfp_df <- as.data.frame(uvhfp_df)
+            uvhfp_df$use_perc <- as.numeric(uvhfp_df$use_perc)
+
+    # Table for use overall
+        hdi_use_df <- as.data.frame(rbind(ulmp_df, ulfp_df, 
+                                            ummp_df, umfp_df,
+                                            uhmp_df, uhfp_df,
+                                            uvhmp_df, uvhfp_df))
+
+        # Add Sex and HDI for plotting purposes 
+            hdi_use_df$sex <- rep('female', nrow(hdi_use_df))
+            hdi_use_df[which(hdi_use_df$category %in% c('Male (low HDI)', 'Male (med HDI)', 
+                                                        'Male (high HDI)', 'Male (vhigh HDI)')), 'sex'] <- 'male'
+            
+            hdi_use_df$hdis <- rep('4. low HDI', nrow(hdi_use_df))
+            hdi_use_df[which(hdi_use_df$category %in% c('Female (med HDI)', 'Male (med HDI)')), 'hdis'] <- '3. medium HDI'
+            hdi_use_df[which(hdi_use_df$category %in% c('Female (high HDI)', 'Male (high HDI)')), 'hdis'] <- '2. high HDI'
+            hdi_use_df[which(hdi_use_df$category %in% c('Female (vhigh HDI)', 'Male (vhigh HDI)')), 'hdis'] <- '1. very high HDI'
+
+    # Plot for use overall
+        pdf(file = "C:/Users/Jamie Danemayer/Documents/Gender/use.pdf",   # The directory you want to save the file in
+            width = 7, # The width of the plot in inches
+            height = 10)
+
+        fig_use <- hdi_use_df 
+        
+        fig_use %>%
+            ggplot(aes(x=age_groups, y=use_perc, group=category, color=hdis)) +
+            geom_line(aes(linetype=sex, color=hdis)) +
+            geom_point(aes(color=hdis)) +
+            theme(legend.position="right") + 
+            labs(color = 'HDI Score', linetype = 'sex', values = color_palette) +
+            # scale_fill_manual(name = 'Categories', values = color_palette) +
+            ggtitle("AT Use by Sex and HDI Score") +
+            ylab("Percent of analytic sample using AT")
+
+        dev.off()
+
+# End
+```
+```{r Need, echo = FALSE}
+# Need, males x females, 1 plot per HDI score group 
+    # Low HDI
+        # males 
+            # subset data
+            lm <- alles[which(alles$hdi_score == 'low' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            need_low_males <- table(lm$any_need, lm$age10)
+            ulmcs <- colSums(need_low_males)
+            ulm <- rbind(need_low_males, ulmcs)
+            no_need <- ulm[1, ]
+            need <- ulm[2, ]
+            need_perc <- as.numeric(round((ulm[2, ]/ulm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('7. Male (low HDI)', 9)
+            ulmp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            ulmp_df <- as.data.frame(ulmp_df)
+            ulmp_df$need_perc <- as.numeric(ulmp_df$need_perc)
+
+        # females
+            # subset data 
+            lf <- alles[which(alles$hdi_score == 'low' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            need_low_females <- table(lf$any_need, lf$age10)
+            ulfcs <- colSums(need_low_females)
+            ulf <- rbind(need_low_females, ulfcs)
+            no_need <- ulf[1, ]
+            need <- ulf[2, ]
+            need_perc <- as.numeric(round((ulf[2, ]/ulf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('8. Female (low HDI)', 9)
+            ulfp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            ulfp_df <- as.data.frame(ulfp_df)
+            ulfp_df$need_perc <- as.numeric(ulfp_df$need_perc)
+
+    # Medium HDI
+        # males 
+            # subset data
+            mm <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            need_med_males <- table(mm$any_need, mm$age10)
+            ummcs <- colSums(need_med_males)
+            umm <- rbind(need_med_males, ummcs)
+            no_need <- umm[1, ]
+            need <- umm[2, ]
+            need_perc <- as.numeric(round((umm[2, ]/umm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('5. Male (medium HDI)', 9)
+            ummp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            ummp_df <- as.data.frame(ummp_df)
+            ummp_df$need_perc <- as.numeric(ummp_df$need_perc)
+
+        # females
+            # subset data 
+            mf <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            need_med_females <- table(mf$any_need, mf$age10)
+            umfcs <- colSums(need_med_females)
+            umf <- rbind(need_med_females, umfcs)
+            no_need <- umf[1, ]
+            need <- umf[2, ]
+            need_perc <- as.numeric(round((umf[2, ]/umf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('6. Female (medium HDI)', 9)
+            umfp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            umfp_df <- as.data.frame(umfp_df)
+            umfp_df$need_perc <- as.numeric(umfp_df$need_perc)
+
+    # High HDI
+            # males 
+            # subset data
+            hm <- alles[which(alles$hdi_score == 'high' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            need_high_males <- table(hm$any_need, hm$age10)
+            uhmcs <- colSums(need_high_males)
+            uhm <- rbind(need_high_males, uhmcs)
+            no_need <- uhm[1, ]
+            need <- uhm[2, ]
+            need_perc <- as.numeric(round((uhm[2, ]/uhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('3. Male (high HDI)', 9)
+            uhmp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            uhmp_df <- as.data.frame(uhmp_df)
+            uhmp_df$need_perc <- as.numeric(uhmp_df$need_perc)
+
+        # females
+            # subset data 
+            hf <- alles[which(alles$hdi_score == 'high' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            need_high_females <- table(hf$any_need, hf$age10)
+            uhfcs <- colSums(need_high_females)
+            uhf <- rbind(need_high_females, uhfcs)
+            no_need <- uhf[1, ]
+            need <- uhf[2, ]
+            need_perc <- as.numeric(round((uhf[2, ]/uhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('4. Female (high HDI)', 9)
+            uhfp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            uhfp_df <- as.data.frame(uhfp_df)
+            uhfp_df$need_perc <- as.numeric(uhfp_df$need_perc)
+
+    # Very high HDI
+        # males 
+            # subset data
+            vhm <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            need_vhigh_males <- table(vhm$any_need, vhm$age10)
+            uvhmcs <- colSums(need_vhigh_males)
+            uvhm <- rbind(need_vhigh_males, uvhmcs)
+            no_need <- uvhm[1, ]
+            need <- uvhm[2, ]
+            need_perc <- as.numeric(round((uvhm[2, ]/uvhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('1. Male (very high HDI)', 9)
+            uvhmp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            uvhmp_df <- as.data.frame(uvhmp_df)
+            uvhmp_df$need_perc <- as.numeric(uvhmp_df$need_perc)
+
+        # females
+            # subset data 
+            vhf <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            need_vhigh_females <- table(vhf$any_need, vhf$age10)
+            uvhfcs <- colSums(need_vhigh_females)
+            uvhf <- rbind(need_vhigh_females, uvhfcs)
+            no_need <- uvhf[1, ]
+            need <- uvhf[2, ]
+            need_perc <- as.numeric(round((uvhf[2, ]/uvhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('2. Female (very high HDI)', 9)
+            uvhfp_df <- cbind(age_groups, need, no_need, need_perc, category)
+            
+            # convert to df and numeric
+            uvhfp_df <- as.data.frame(uvhfp_df)
+            uvhfp_df$need_perc <- as.numeric(uvhfp_df$need_perc)
+
+    # Table for need overall
+        hdi_need_df <- as.data.frame(rbind(ulmp_df, ulfp_df, 
+                                            ummp_df, umfp_df,
+                                            uhmp_df, uhfp_df,
+                                            uvhmp_df, uvhfp_df))
+        
+        # Add Sex and HDI for plotting purposes 
+            hdi_need_df$sex <- rep('female', nrow(hdi_need_df))
+            hdi_need_df[which(hdi_need_df$category %in% c('7. Male (low HDI)', '5. Male (medium HDI)', 
+                                                        '3. Male (high HDI)', '1. Male (very high HDI)')), 'sex'] <- 'male'
+            
+            hdi_need_df$hdis <- rep('4. low HDI', nrow(hdi_need_df))
+            hdi_need_df[which(hdi_need_df$category %in% c('6. Female (medium HDI)', '5. Male (medium HDI)')), 'hdis'] <- '3. medium HDI'
+            hdi_need_df[which(hdi_need_df$category %in% c('4. Female (high HDI)', '3. Male (high HDI)')), 'hdis'] <- '2. high HDI'
+            hdi_need_df[which(hdi_need_df$category %in% c('2. Female (very high HDI)', '1. Male (very high HDI)')), 'hdis'] <- '1. very high HDI'
+
+    # Plot for need overall
+        pdf(file = "C:/Users/Jamie Danemayer/Documents/Gender/need.pdf",   # The directory you want to save the file in
+            width = 7, # The width of the plot in inches
+            height = 10)
+
+        fig_need <- hdi_need_df 
+        
+        fig_need %>%
+            ggplot(aes(x=age_groups, y=need_perc, group=category, color=hdis)) +
+            geom_line(aes(linetype=sex, color=hdis)) +
+            geom_point(aes(color=hdis)) +
+            theme(legend.position="right") + 
+            labs(color = 'HDI Score', linetype = 'sex', values = color_palette) +
+            # scale_fill_manual(name = 'Categories', values = color_palette) +
+            ggtitle("AT Use by Sex and HDI Score") +
+            ylab("Percent of analytic sample using AT")
+
+        dev.off()
+# End
+```
+```{r Unmet, echo = FALSE}
+# Unmet need, males x females, 1 plot per HDI score group 
+    # Low HDI
+        # males 
+            # subset data
+            lm <- alles[which(alles$hdi_score == 'low' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            unmet_low_males <- table(lm$any_unmet, lm$age10)
+            ulmcs <- colSums(unmet_low_males)
+            ulm <- rbind(unmet_low_males, ulmcs)
+            no_unmet <- ulm[1, ]
+            unmet <- ulm[2, ]
+            unmet_perc <- as.numeric(round((ulm[2, ]/ulm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('7. Male (low HDI)', 9)
+            ulmp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            ulmp_df <- as.data.frame(ulmp_df)
+            ulmp_df$unmet_perc <- as.numeric(ulmp_df$unmet_perc)
+
+        # females
+            # subset data 
+            lf <- alles[which(alles$hdi_score == 'low' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            unmet_low_females <- table(lf$any_unmet, lf$age10)
+            ulfcs <- colSums(unmet_low_females)
+            ulf <- rbind(unmet_low_females, ulfcs)
+            no_unmet <- ulf[1, ]
+            unmet <- ulf[2, ]
+            unmet_perc <- as.numeric(round((ulf[2, ]/ulf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('8. Female (low HDI)', 9)
+            ulfp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            ulfp_df <- as.data.frame(ulfp_df)
+            ulfp_df$unmet_perc <- as.numeric(ulfp_df$unmet_perc)
+
+    # Medium HDI
+        # males 
+            # subset data
+            mm <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            unmet_med_males <- table(mm$any_unmet, mm$age10)
+            ummcs <- colSums(unmet_med_males)
+            umm <- rbind(unmet_med_males, ummcs)
+            no_unmet <- umm[1, ]
+            unmet <- umm[2, ]
+            unmet_perc <- as.numeric(round((umm[2, ]/umm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('5. Male (medium HDI)', 9)
+            ummp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            ummp_df <- as.data.frame(ummp_df)
+            ummp_df$unmet_perc <- as.numeric(ummp_df$unmet_perc)
+
+        # females
+            # subset data 
+            mf <- alles[which(alles$hdi_score == 'medium' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            unmet_med_females <- table(mf$any_unmet, mf$age10)
+            umfcs <- colSums(unmet_med_females)
+            umf <- rbind(unmet_med_females, umfcs)
+            no_unmet <- umf[1, ]
+            unmet <- umf[2, ]
+            unmet_perc <- as.numeric(round((umf[2, ]/umf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('6. Female (medium HDI)', 9)
+            umfp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            umfp_df <- as.data.frame(umfp_df)
+            umfp_df$unmet_perc <- as.numeric(umfp_df$unmet_perc)
+
+    # High HDI
+            # males 
+            # subset data
+            hm <- alles[which(alles$hdi_score == 'high' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            unmet_high_males <- table(hm$any_unmet, hm$age10)
+            uhmcs <- colSums(unmet_high_males)
+            uhm <- rbind(unmet_high_males, uhmcs)
+            no_unmet <- uhm[1, ]
+            unmet <- uhm[2, ]
+            unmet_perc <- as.numeric(round((uhm[2, ]/uhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('3. Male (high HDI)', 9)
+            uhmp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            uhmp_df <- as.data.frame(uhmp_df)
+            uhmp_df$unmet_perc <- as.numeric(uhmp_df$unmet_perc)
+
+        # females
+            # subset data 
+            hf <- alles[which(alles$hdi_score == 'high' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            unmet_high_females <- table(hf$any_unmet, hf$age10)
+            uhfcs <- colSums(unmet_high_females)
+            uhf <- rbind(unmet_high_females, uhfcs)
+            no_unmet <- uhf[1, ]
+            unmet <- uhf[2, ]
+            unmet_perc <- as.numeric(round((uhf[2, ]/uhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('4. Female (high HDI)', 9)
+            uhfp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            uhfp_df <- as.data.frame(uhfp_df)
+            uhfp_df$unmet_perc <- as.numeric(uhfp_df$unmet_perc)
+
+    # Very high HDI
+        # males 
+            # subset data
+            vhm <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 1), ]
+            
+            # calculate proportions
+            unmet_vhigh_males <- table(vhm$any_unmet, vhm$age10)
+            uvhmcs <- colSums(unmet_vhigh_males)
+            uvhm <- rbind(unmet_vhigh_males, uvhmcs)
+            no_unmet <- uvhm[1, ]
+            unmet <- uvhm[2, ]
+            unmet_perc <- as.numeric(round((uvhm[2, ]/uvhm[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('1. Male (very high HDI)', 9)
+            uvhmp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            uvhmp_df <- as.data.frame(uvhmp_df)
+            uvhmp_df$unmet_perc <- as.numeric(uvhmp_df$unmet_perc)
+
+        # females
+            # subset data 
+            vhf <- alles[which(alles$hdi_score == 'vhigh' & alles$SEX == 2), ]
+            
+            # calculate proportions 
+            unmet_vhigh_females <- table(vhf$any_unmet, vhf$age10)
+            uvhfcs <- colSums(unmet_vhigh_females)
+            uvhf <- rbind(unmet_vhigh_females, uvhfcs)
+            no_unmet <- uvhf[1, ]
+            unmet <- uvhf[2, ]
+            unmet_perc <- as.numeric(round((uvhf[2, ]/uvhf[3, ])*100, 2))
+            
+            # add labels 
+            age_groups <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+')
+            category <- rep('2. Female (very high HDI)', 9)
+            uvhfp_df <- cbind(age_groups, unmet, no_unmet, unmet_perc, category)
+            
+            # convert to df and numeric
+            uvhfp_df <- as.data.frame(uvhfp_df)
+            uvhfp_df$unmet_perc <- as.numeric(uvhfp_df$unmet_perc)
+
+    # Table for unmet overall
+        hdi_unmet_df <- as.data.frame(rbind(ulmp_df, ulfp_df, 
+                                            ummp_df, umfp_df,
+                                            uhmp_df, uhfp_df,
+                                            uvhmp_df, uvhfp_df))
+        
+        # Add Sex and HDI for plotting purposes 
+            hdi_unmet_df$sex <- rep('female', nrow(hdi_unmet_df))
+            hdi_unmet_df[which(hdi_unmet_df$category %in% c('7. Male (low HDI)', '5. Male (medium HDI)', 
+                                                        '3. Male (high HDI)', '1. Male (very high HDI)')), 'sex'] <- 'male'
+            
+            hdi_unmet_df$hdis <- rep('4. low HDI', nrow(hdi_unmet_df))
+            hdi_unmet_df[which(hdi_unmet_df$category %in% c('6. Female (medium HDI)', '5. Male (medium HDI)')), 'hdis'] <- '3. medium HDI'
+            hdi_unmet_df[which(hdi_unmet_df$category %in% c('4. Female (high HDI)', '3. Male (high HDI)')), 'hdis'] <- '2. high HDI'
+            hdi_unmet_df[which(hdi_unmet_df$category %in% c('2. Female (very high HDI)', '1. Male (very high HDI)')), 'hdis'] <- '1. very high HDI'
+
+    # Plot for unmet 
+        pdf(file = "C:/Users/Jamie Danemayer/Documents/Gender/unmet.pdf",   # The directory you want to save the file in
+            width = 7, # The width of the plot in inches
+            height = 10)
+        fig_unmet <- hdi_unmet_df 
+
+        fig_unmet %>%
+            ggplot(aes(x=age_groups, y=unmet_perc, group=category, color=hdis)) +
+            geom_line(aes(linetype=sex, color=hdis)) +
+            geom_point(aes(color=hdis)) +
+            theme(legend.position="right") + 
+            labs(color = 'hdis', linetype = 'sex') + # , values = color_palette) +
+            # scale_fill_manual(name = 'Categories', values = color_palette) +
+            ggtitle("AT Unmet need by Sex and HDI Score") +
+            ylab("Percent of analytic sample reporting unmet AT needs")
+
+        dev.off()
+# End
+```
+
+```{r indicator models, echo = FALSE}
+# Switch labels back to 0, 1 (if ran the table section)
+    # alles[which(alles$any_need == 'No'), 'any_need'] <- 0
+    # alles[which(alles$any_need == 'Yes'), 'any_need'] <- 1
+    # alles$any_need <- as.numeric(alles$any_need)
+
+    # alles[which(alles$any_use == 'No'), 'any_use'] <- 0
+    # alles[which(alles$any_use == 'Yes'), 'any_use'] <- 1
+    # alles$any_use <- as.numeric(alles$any_use)
+
+    # alles[which(alles$any_unmet == 'No'), 'any_unmet'] <- 0
+    # alles[which(alles$any_unmet == 'Yes'), 'any_unmet'] <- 1
+    # alles$any_unmet <- as.numeric(alles$any_unmet)
+
+# Country fixed effects 
+    # alles$country <- as.factor(alles$country)
+# Strategy 
+    # 1. Run models with all interaction in them 
+    # 2. Report interaction for continuous vars with p values, justify stratification
+    # 3. Run with variables categorised  
+    # 4. Present results stratified 
+    
+# Need 
+    need1 <- glm(any_need ~ SEX*(scale(ageby5, scale = FALSE)) + SEX*(scale(hdiby5, scale = FALSE)), data = alles_g, family = "binomial")
+    need1_aic_hic <- cbind(exp(cbind(OR = coef(need1), confint(need1))), round(summary(need1)$coef, 4)) 
+    
+    need1s <- glm(any_need ~ SEX + age10 + hdi_score, data = alles_g, family = "binomial")
+    need1_strat <- cbind(exp(cbind(OR = coef(need1s), confint(need1s))), round(summary(need1s)$coef, 4)) 
+
+# Use
+    use1 <- glm(any_use ~ SEX*(scale(ageby5, scale = FALSE)) + SEX*(scale(hdiby5, scale = FALSE)) + SEX*fdn, data = alles_g, family = "binomial")
+    use1_aic_hic <- cbind(exp(cbind(OR = coef(use1), confint(use1))), round(summary(use1)$coef, 4)) 
+    
+    use1s <- glm(any_use ~ SEX + age10 + hdi_score + fdn, data = alles_g, family = "binomial")
+    use1_strat <- cbind(exp(cbind(OR = coef(use1s), confint(use1s))), round(summary(use1s)$coef, 4))
+
+# Unmet need
+    unmet1 <- glm(any_unmet ~ SEX*(scale(ageby5, scale = FALSE)) + SEX*(scale(hdiby5, scale = FALSE)) + SEX*fdn, data = alles_g, family = "binomial")
+    unmet1_aic_hic <- cbind(exp(cbind(OR = coef(unmet1), confint(unmet1))), round(summary(unmet1)$coef, 4)) 
+    
+    unmet1s <- glm(any_unmet ~ SEX + age10 + hdi_score + fdn, data = alles_g, family = "binomial")
+    unmet1_strat <- cbind(exp(cbind(OR = coef(unmet1s), confint(unmet1s))), round(summary(unmet1s)$coef, 4))
+
+# Save interaction tables
+    i_ors <- rbind(need1_aic_hic, use1_aic_hic, unmet1_aic_hic)
+    i_ors <- as.data.frame(i_ors)
+    write.xlsx(i_ors, file = 'i_ors_g.xlsx', overwrite = TRUE)
+
+# Save stratified tables
+    s_ors <- rbind(need1_strat, use1_strat, unmet1_strat)
+    s_ors <- as.data.frame(s_ors)
+    write.xlsx(s_ors, file = 's_ors_g.xlsx', overwrite = TRUE)
+
+```
+
+```{r barrier models, echo = FALSE}
+# Notes
+    # linear regression: dependent var is cont. analyses the relationship between a continuous response variable and one or more explanatory variables, and their interactions.
+    # logistic regression: dependent var is cat. type of classification model for supervisied ML, used to predict binary outcomes. Performs regression on the probabilities of the outcome being a category. 
+    # logit regression: same as logistic 
+    # multivariable regression: multiple outcomes, multiple predictors
+    # multivariate regression: multiple outcomes, single predictor
+    # multiple regression: single outcome, multiple independent variables. 
+
+# We are doing multivariable logistic regression 
+# Compare to a subset of only those with unmet need
+    gunmet <- alles[which(alles$any_unmet == 1), ]
+    gunmet_g <- alles_g[which(alles_g$any_unmet == 1), ]
+    # nrow(gunmet) # 26760
+    # nrow(gunmet_g)
+# Models 
+    b1 <- glm(BARRIER_1 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b2 <- glm(BARRIER_2 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b3 <- glm(BARRIER_3 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b4 <- glm(BARRIER_4 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b5 <- glm(BARRIER_5 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b6 <- glm(BARRIER_6 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+    b7 <- glm(BARRIER_7 ~ SEX + age10 + hdi_score + fdn, data = gunmet, family = "binomial")
+table(gunmet$hdi_score)
+# Results 
+    # b1_exp <- cbind(exp(cbind(OR = coef(b1), confint(b1))), round(summary(b1)$coef, 4)) 
+    b2_exp <- cbind(exp(cbind(OR = coef(b2), confint(b2))), round(summary(b2)$coef, 4)) 
+    b3_exp <- cbind(exp(cbind(OR = coef(b3), confint(b3))), round(summary(b3)$coef, 4)) 
+    b4_exp <- cbind(exp(cbind(OR = coef(b4), confint(b4))), round(summary(b4)$coef, 4)) 
+    b5_exp <- cbind(exp(cbind(OR = coef(b5), confint(b5))), round(summary(b5)$coef, 4)) 
+    b6_exp <- cbind(exp(cbind(OR = coef(b6), confint(b6))), round(summary(b6)$coef, 4)) 
+    b7_exp <- cbind(exp(cbind(OR = coef(b7), confint(b7))), round(summary(b7)$coef, 4)) 
+
+    gen_barriers <- rbind(b1_exp, b2_exp, b3_exp, b4_exp, b5_exp, b6_exp, b7_exp)
+    gen_barriers <- as.data.frame(gen_barriers)
+    write.xlsx(gen_barriers, file = 's_ors_barriers.xlsx', overwrite = TRUE)
+
+## Repeat for without glasses
+# Models 
+    b1 <- glm(BARRIER_1 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b2 <- glm(BARRIER_2 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b3 <- glm(BARRIER_3 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b4 <- glm(BARRIER_4 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b5 <- glm(BARRIER_5 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b6 <- glm(BARRIER_6 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+    b7 <- glm(BARRIER_7 ~ SEX + age10 + hdi_score + fdn, data = gunmet_g, family = "binomial")
+
+# Results 
+    b1_exp <- cbind(exp(cbind(OR = coef(b1), confint(b1))), round(summary(b1)$coef, 4)) 
+    b2_exp <- cbind(exp(cbind(OR = coef(b2), confint(b2))), round(summary(b2)$coef, 4)) 
+    b3_exp <- cbind(exp(cbind(OR = coef(b3), confint(b3))), round(summary(b3)$coef, 4)) 
+    b4_exp <- cbind(exp(cbind(OR = coef(b4), confint(b4))), round(summary(b4)$coef, 4)) 
+    b5_exp <- cbind(exp(cbind(OR = coef(b5), confint(b5))), round(summary(b5)$coef, 4)) 
+    b6_exp <- cbind(exp(cbind(OR = coef(b6), confint(b6))), round(summary(b6)$coef, 4)) 
+    b7_exp <- cbind(exp(cbind(OR = coef(b7), confint(b7))), round(summary(b7)$coef, 4)) 
+
+    gen_barriers_g <- rbind(b1_exp, b2_exp, b3_exp, b4_exp, b5_exp, b6_exp, b7_exp)
+    gen_barriers_g <- as.data.frame(gen_barriers_g)
+    write.xlsx(gen_barriers_g, file = 's_ors_barriers_g.xlsx', overwrite = TRUE)
+
+
+# gunmet_g[which(gunmet_g$SEX == '')]
+# table(gunmet_g$SEX)
+# 8114/nrow(gunmet_g)
+# nrow(alles_g)
+# check <- alles_g[which(alles_g$SEX == 2 & alles_g$any_unmet == 1), ]
+# nrow(check)/nrow(alles_g)
+
+
+```
+```{r satisfaction models, echo = FALSE}
+# Subset for use 
+    guse <- alles[which(alles$any_use == 1), ]
+    guse_g <- alles_g[which(alles_g$any_use == 1), ]
+    nrow(guse_g)
+    # nrow(guse)
+# Country fixed effects
+    # users$country <- as.factor(users$country)
+    # users$country <- relevel(data$country, ref = "Sweden")
+# Models
+    s1 <- glm(dspr ~ SEX + AGE + fdn + hdi_value, data = guse, family = "binomial")
+    s2 <- glm(dsas ~ SEX + AGE + fdn + hdi_value, data = guse, family = "binomial")
+    s3 <- glm(dsfu ~ SEX + AGE + fdn + hdi_value, data = guse, family = "binomial")
+    # Results
+    s1_exp <- cbind(exp(cbind(OR = coef(s1), confint(s1))), round(summary(s1)$coef, 4)) 
+    s2_exp <- cbind(exp(cbind(OR = coef(s2), confint(s2))), round(summary(s2)$coef, 4)) 
+    s3_exp <- cbind(exp(cbind(OR = coef(s3), confint(s3))), round(summary(s3)$coef, 4)) 
+
+    gen_sat <- rbind(s1_exp, s2_exp, s3_exp) 
+    gen_sat <- as.data.frame(gen_sat)
+    write.xlsx(gen_sat, file = 'gen_sat.xlsx', overwrite = TRUE)
+
+
+## Now with glasses excluded 
+# Models
+    s1 <- glm(dspr ~ SEX + AGE + fdn + hdi_value, data = guse_g, family = "binomial")
+    s2 <- glm(dsas ~ SEX + AGE + fdn + hdi_value, data = guse_g, family = "binomial")
+    s3 <- glm(dsfu ~ SEX + AGE + fdn + hdi_value, data = guse_g, family = "binomial")
+    # Results
+    s1_exp <- cbind(exp(cbind(OR = coef(s1), confint(s1))), round(summary(s1)$coef, 4)) 
+    s2_exp <- cbind(exp(cbind(OR = coef(s2), confint(s2))), round(summary(s2)$coef, 4)) 
+    s3_exp <- cbind(exp(cbind(OR = coef(s3), confint(s3))), round(summary(s3)$coef, 4)) 
+
+    gen_sat_g <- rbind(s1_exp, s2_exp, s3_exp) 
+    gen_sat_g <- as.data.frame(gen_sat_g)
+    write.xlsx(gen_sat_g, file = 'gen_sat_g.xlsx', overwrite = TRUE)
+
+
+```
